@@ -12,6 +12,10 @@ public class MatchEventPublisher {
 
     private final List<MatchObserver> observers = new ArrayList<>();
 
+    public MatchEventPublisher(List<MatchObserver> observers) {
+        this.observers.addAll(observers);
+    }
+
     public void subscribe(MatchObserver observer) {
         observers.add(observer);
     }

@@ -5,6 +5,8 @@ import com.zzx.matchlens.common.Result;
 import com.zzx.matchlens.common.SportType;
 import com.zzx.matchlens.state.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,6 +70,7 @@ public class Match {
         };
     }
 
+    @JsonIgnore
     public MatchState getState() { return state; }
     public void setState(MatchState state) { this.state = state; }
 

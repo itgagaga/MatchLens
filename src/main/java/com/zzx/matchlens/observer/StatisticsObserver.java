@@ -3,7 +3,9 @@ package com.zzx.matchlens.observer;
 import com.zzx.matchlens.entity.Match;
 import com.zzx.matchlens.entity.MatchEvent;
 import com.zzx.matchlens.entity.Player;
+import org.springframework.stereotype.Component;
 
+@Component
 public class StatisticsObserver implements MatchObserver {
 
     @Override

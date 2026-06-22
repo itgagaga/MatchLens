@@ -3,11 +3,14 @@ package com.zzx.matchlens.observer;
 import com.zzx.matchlens.entity.Match;
 import com.zzx.matchlens.entity.MatchEvent;
 
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Component
 public class ReportObserver implements MatchObserver {
 
     private final Map<String, List<MatchEvent>> matchEventLog = new HashMap<>();

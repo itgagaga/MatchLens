@@ -4,7 +4,9 @@ import com.zzx.matchlens.common.EventType;
 import com.zzx.matchlens.entity.Match;
 import com.zzx.matchlens.entity.MatchEvent;
 import com.zzx.matchlens.entity.Player;
+import org.springframework.stereotype.Component;
 
+@Component
 public class RiskWarningObserver implements MatchObserver {
 
     private static final int FOUL_WARNING_THRESHOLD = 4;

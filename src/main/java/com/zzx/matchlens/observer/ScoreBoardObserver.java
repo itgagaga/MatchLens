@@ -4,7 +4,9 @@ import com.zzx.matchlens.common.EventType;
 import com.zzx.matchlens.entity.Match;
 import com.zzx.matchlens.entity.MatchEvent;
 import com.zzx.matchlens.entity.Team;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ScoreBoardObserver implements MatchObserver {
 
     @Override

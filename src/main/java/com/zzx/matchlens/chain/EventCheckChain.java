@@ -3,7 +3,9 @@ package com.zzx.matchlens.chain;
 import com.zzx.matchlens.common.Result;
 import com.zzx.matchlens.entity.Match;
 import com.zzx.matchlens.entity.MatchEvent;
+import org.springframework.stereotype.Component;
 
+@Component
 public class EventCheckChain {
 
     private final EventCheckHandler head;
