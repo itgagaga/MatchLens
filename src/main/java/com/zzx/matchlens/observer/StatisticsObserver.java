@@ -3,9 +3,11 @@ package com.zzx.matchlens.observer;
 import com.zzx.matchlens.entity.Match;
 import com.zzx.matchlens.entity.MatchEvent;
 import com.zzx.matchlens.entity.Player;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
+@Order(2)
 public class StatisticsObserver implements MatchObserver {
 
     @Override

@@ -1,26 +1,31 @@
 package com.zzx.matchlens.service;
 
+import com.zzx.matchlens.agent.SituationAnalysisAgent;
 import com.zzx.matchlens.entity.Match;
 import com.zzx.matchlens.entity.MatchStatistics;
 import com.zzx.matchlens.entity.Player;
 import com.zzx.matchlens.entity.Team;
 import com.zzx.matchlens.repository.MatchRepository;
-import com.zzx.matchlens.strategy.AnalysisStrategy;
-import com.zzx.matchlens.strategy.AnalysisStrategyFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class StatisticsService {
 
     private final MatchRepository matchRepository;
+    private final SituationAnalysisAgent situationAnalysisAgent;
 
-    public StatisticsService(MatchRepository matchRepository) {
+    public StatisticsService(MatchRepository matchRepository,
+                             SituationAnalysisAgent situationAnalysisAgent) {
         this.matchRepository = matchRepository;
+        this.situationAnalysisAgent = situationAnalysisAgent;
     }
 
     public MatchStatistics getStatistics(String matchId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new RuntimeException("比赛不存在: " + matchId));
+        if (match.getHomeTeam() == null || match.getAwayTeam() == null) {
+            throw new RuntimeException("比赛尚未设置队伍");
+        }
         match.getStatistics().updateFromMatch(match);
         return match.getStatistics();
     }
@@ -28,13 +33,18 @@ public class StatisticsService {
     public String getAnalysis(String matchId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new RuntimeException("比赛不存在: " + matchId));
-        AnalysisStrategy strategy = AnalysisStrategyFactory.getStrategy(match.getSportType());
-        return strategy.analyze(match);
+        if (match.getHomeTeam() == null || match.getAwayTeam() == null) {
+            throw new RuntimeException("比赛尚未设置队伍");
+        }
+        return situationAnalysisAgent.execute(match);
     }
 
     public void printMatchOverview(String matchId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new RuntimeException("比赛不存在: " + matchId));
+        if (match.getHomeTeam() == null || match.getAwayTeam() == null) {
+            throw new RuntimeException("比赛尚未设置队伍");
+        }
 
         Team home = match.getHomeTeam();
         Team away = match.getAwayTeam();

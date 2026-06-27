@@ -11,6 +11,9 @@ public class BasicEventCheckHandler extends EventCheckHandler {
         if (match == null) {
             return Result.fail("比赛不存在");
         }
+        if (match.getHomeTeam() == null || match.getAwayTeam() == null) {
+            return Result.fail("比赛尚未设置队伍");
+        }
         if (event == null) {
             return Result.fail("事件数据为空");
         }

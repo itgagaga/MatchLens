@@ -90,8 +90,10 @@ public class BasketballAnalysisStrategy implements AnalysisStrategy {
     }
 
     private Player findTopScorer(Match match) {
-        return match.getHomeTeam().getPlayers().stream()
-                .map(p -> p)
+        java.util.List<Player> allPlayers = new java.util.ArrayList<>();
+        allPlayers.addAll(match.getHomeTeam().getPlayers());
+        allPlayers.addAll(match.getAwayTeam().getPlayers());
+        return allPlayers.stream()
                 .collect(java.util.stream.Collectors.toMap(
                         p -> p, p -> p.getStat(EventType.SCORE.name())))
                 .entrySet().stream()

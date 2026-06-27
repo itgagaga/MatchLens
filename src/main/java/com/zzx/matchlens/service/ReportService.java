@@ -1,11 +1,11 @@
 package com.zzx.matchlens.service;
 
+import com.zzx.matchlens.agent.ReviewReportAgent;
+import com.zzx.matchlens.agent.SituationAnalysisAgent;
 import com.zzx.matchlens.entity.Match;
 import com.zzx.matchlens.entity.Player;
 import com.zzx.matchlens.entity.Team;
 import com.zzx.matchlens.repository.MatchRepository;
-import com.zzx.matchlens.strategy.AnalysisStrategy;
-import com.zzx.matchlens.strategy.AnalysisStrategyFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -14,14 +14,24 @@ import java.util.Comparator;
 public class ReportService {
 
     private final MatchRepository matchRepository;
+    private final SituationAnalysisAgent situationAnalysisAgent;
+    private final ReviewReportAgent reviewReportAgent;
 
-    public ReportService(MatchRepository matchRepository) {
+    public ReportService(MatchRepository matchRepository,
+                         SituationAnalysisAgent situationAnalysisAgent,
+                         ReviewReportAgent reviewReportAgent) {
         this.matchRepository = matchRepository;
+        this.situationAnalysisAgent = situationAnalysisAgent;
+        this.reviewReportAgent = reviewReportAgent;
     }
 
     public String generateReport(String matchId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new RuntimeException("比赛不存在: " + matchId));
+
+        if (match.getHomeTeam() == null || match.getAwayTeam() == null) {
+            throw new RuntimeException("比赛尚未设置队伍，无法生成报告");
+        }
 
         Team home = match.getHomeTeam();
         Team away = match.getAwayTeam();
@@ -64,14 +74,13 @@ public class ReportService {
         sb.append("【事件统计】\n");
         sb.append("  总事件数: ").append(match.getEvents().size()).append("\n\n");
 
-        // 态势分析
+        // 态势分析（由 SituationAnalysisAgent 生成）
         sb.append("【态势分析】\n");
-        AnalysisStrategy strategy = AnalysisStrategyFactory.getStrategy(match.getSportType());
-        sb.append(strategy.analyze(match)).append("\n\n");
+        sb.append(situationAnalysisAgent.execute(match)).append("\n\n");
 
-        // 赛后复盘（占位，后续由 AI Agent 填充）
+        // 赛后复盘（由 ReviewReportAgent 生成，优先 DeepSeek，降级本地规则）
         sb.append("【赛后复盘】\n");
-        sb.append(generateReview(match)).append("\n");
+        sb.append(reviewReportAgent.execute(match)).append("\n");
 
         return sb.toString();
     }
@@ -83,25 +92,5 @@ public class ReportService {
                 .ifPresent(p -> sb.append(String.format("  %s #%d %s: %d 分%n",
                         team.getTeamName(), p.getNumber(), p.getPlayerName(),
                         p.getStat("SCORE"))));
-    }
-
-    private String generateReview(Match match) {
-        // 占位实现，后续由 AI Agent 替换
-        Team home = match.getHomeTeam();
-        Team away = match.getAwayTeam();
-        StringBuilder sb = new StringBuilder();
-
-        if (home.getScore() > away.getScore()) {
-            sb.append(String.format("  本场比赛 %s 以 %d:%d 战胜 %s。%n",
-                    home.getTeamName(), home.getScore(), away.getScore(), away.getTeamName()));
-        } else if (away.getScore() > home.getScore()) {
-            sb.append(String.format("  本场比赛 %s 以 %d:%d 战胜 %s。%n",
-                    away.getTeamName(), away.getScore(), home.getScore(), home.getTeamName()));
-        } else {
-            sb.append(String.format("  本场比赛双方 %d:%d 战平。%n", home.getScore(), away.getScore()));
-        }
-
-        sb.append("  [赛后复盘内容将由 AI Agent 生成]");
-        return sb.toString();
     }
 }

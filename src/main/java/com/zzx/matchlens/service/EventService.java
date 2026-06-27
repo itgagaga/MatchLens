@@ -5,7 +5,6 @@ import com.zzx.matchlens.common.EventType;
 import com.zzx.matchlens.common.Result;
 import com.zzx.matchlens.entity.Match;
 import com.zzx.matchlens.entity.MatchEvent;
-import com.zzx.matchlens.entity.Player;
 import com.zzx.matchlens.observer.MatchEventPublisher;
 import com.zzx.matchlens.repository.MatchRepository;
 import org.springframework.stereotype.Service;
@@ -45,23 +44,12 @@ public class EventService {
         // 保存事件
         match.addEvent(event);
 
-        // 更新球员统计
-        Player player = findPlayer(match, playerId);
-        if (player != null) {
-            String statKey = eventType.name();
-            player.addStat(statKey, scoreValue > 0 ? scoreValue : 1);
-        }
+        // 球员统计更新由 StatisticsObserver 统一负责，避免重复计数
 
         // 通知观察者
         publisher.publish(match, event);
 
         matchRepository.save(match);
         return Result.ok("事件录入成功");
-    }
-
-    private Player findPlayer(Match match, String playerId) {
-        Player p = match.getHomeTeam().findPlayer(playerId);
-        if (p != null) return p;
-        return match.getAwayTeam().findPlayer(playerId);
     }
 }

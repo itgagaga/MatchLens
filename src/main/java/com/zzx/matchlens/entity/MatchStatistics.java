@@ -22,11 +22,16 @@ public class MatchStatistics {
                 : awayScore > homeScore ? away.getTeamName() : null;
         this.eventCount = match.getEvents().size();
 
+        teamStats.clear();
         for (Player p : home.getPlayers()) {
             playerStats.put(p.getPlayerId(), new HashMap<>(p.getStatistics()));
+            p.getStatistics().forEach((key, value) ->
+                    teamStats.merge(home.getTeamName() + "_" + key, value, Integer::sum));
         }
         for (Player p : away.getPlayers()) {
             playerStats.put(p.getPlayerId(), new HashMap<>(p.getStatistics()));
+            p.getStatistics().forEach((key, value) ->
+                    teamStats.merge(away.getTeamName() + "_" + key, value, Integer::sum));
         }
     }
 
