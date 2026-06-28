@@ -1,18 +1,21 @@
 package com.zzx.matchlens.agent;
 
 import com.zzx.matchlens.entity.Match;
+import com.zzx.matchlens.service.AiCallLogService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class RemoteModelAgent implements AiAgent {
 
-    @Value("${deepseek.api-key}")
+    @Value("${deepseek.api-key:}")
     private String apiKey;
 
     @Value("${deepseek.base-url}")
@@ -21,60 +24,172 @@ public class RemoteModelAgent implements AiAgent {
     @Value("${deepseek.model}")
     private String model;
 
-    private final RestTemplate restTemplate = new RestTemplate();
-    private final DataCollectAgent dataCollectAgent;
+    @Value("${deepseek.connect-timeout:10000}")
+    private int connectTimeout;
 
-    public RemoteModelAgent(DataCollectAgent dataCollectAgent) {
+    @Value("${deepseek.read-timeout:60000}")
+    private int readTimeout;
+
+    @Value("${deepseek.max-retries:2}")
+    private int maxRetries;
+
+    private final DataCollectAgent dataCollectAgent;
+    private final AiCallLogService aiCallLogService;
+
+    private RestTemplate restTemplate;
+
+    public RemoteModelAgent(DataCollectAgent dataCollectAgent, AiCallLogService aiCallLogService) {
         this.dataCollectAgent = dataCollectAgent;
+        this.aiCallLogService = aiCallLogService;
+    }
+
+    private RestTemplate getRestTemplate() {
+        if (restTemplate == null) {
+            org.springframework.http.client.SimpleClientHttpRequestFactory factory =
+                    new org.springframework.http.client.SimpleClientHttpRequestFactory();
+            factory.setConnectTimeout(connectTimeout);
+            factory.setReadTimeout(readTimeout);
+            restTemplate = new RestTemplate(factory);
+        }
+        return restTemplate;
+    }
+
+    /**
+     * 测试用：注入自定义 RestTemplate（如模拟超时）
+     */
+    public void setRestTemplate(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
     }
 
     @Override
     public String execute(Match match) {
-        return callDeepSeek(match);
+        AiAgentResponse response = callWithPrompt(match, AiAgentType.REVIEW_REPORT, buildDefaultSystemPrompt());
+        return response.isSuccess() ? response.getContent() : null;
+    }
+
+    public AiAgentResponse callWithPrompt(Match match, AiAgentType agentType, String systemPrompt) {
+        if (apiKey == null || apiKey.isBlank()) {
+            AiAgentResponse resp = AiAgentResponse.failure("API Key 未配置", 0, agentType, match.getMatchId());
+            logResponse(resp, systemPrompt);
+            return resp;
+        }
+
+        String matchData = dataCollectAgent.collect(match);
+        String userPrompt = buildUserPrompt(match, matchData);
+        String fullPrompt = systemPrompt + "\n---\n" + userPrompt;
+
+        Exception lastException = null;
+        long totalStart = System.currentTimeMillis();
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            long attemptStart = System.currentTimeMillis();
+            try {
+                String url = baseUrl + "/chat/completions";
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                headers.setBearerAuth(apiKey);
+
+                Map<String, Object> body = Map.of(
+                        "model", model,
+                        "messages", List.of(
+                                Map.of("role", "system", "content", systemPrompt),
+                                Map.of("role", "user", "content", userPrompt)
+                        ),
+                        "temperature", 0.7,
+                        "max_tokens", 2000
+                );
+
+                HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+                @SuppressWarnings("unchecked")
+                ResponseEntity<Map> response = getRestTemplate().exchange(url, HttpMethod.POST, request, Map.class);
+                long elapsed = System.currentTimeMillis() - attemptStart;
+
+                Map<String, Object> responseBody = response.getBody();
+                String content = extractContent(responseBody);
+
+                if (isContentValid(content)) {
+                    AiAgentResponse resp = AiAgentResponse.success(content, elapsed, agentType, match.getMatchId());
+                    logResponse(resp, fullPrompt);
+                    return resp;
+                }
+
+                AiAgentResponse resp = AiAgentResponse.failure("AI 模型返回内容为空或无效", elapsed, agentType, match.getMatchId());
+                logResponse(resp, fullPrompt);
+                return resp;
+
+            } catch (Exception e) {
+                lastException = e;
+                long elapsed = System.currentTimeMillis() - attemptStart;
+                System.err.println("[RemoteModelAgent] 第 " + attempt + " 次调用失败 (" + elapsed + "ms): " + e.getMessage());
+
+                if (attempt < maxRetries) {
+                    try { TimeUnit.SECONDS.sleep(1); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); }
+                }
+            }
+        }
+
+        long totalTime = System.currentTimeMillis() - totalStart;
+        String errorMsg = "远程 AI 调用失败（重试 " + maxRetries + " 次后放弃）";
+        if (lastException != null) {
+            if (lastException.getCause() instanceof SocketTimeoutException) {
+                errorMsg = "远程 AI 调用超时";
+            } else {
+                errorMsg += ": " + lastException.getMessage();
+            }
+        }
+        AiAgentResponse resp = AiAgentResponse.failure(errorMsg, totalTime, agentType, match.getMatchId());
+        logResponse(resp, fullPrompt);
+        return resp;
+    }
+
+    private void logResponse(AiAgentResponse response, String prompt) {
+        try {
+            aiCallLogService.log(response, prompt);
+        } catch (Exception e) {
+            System.err.println("[RemoteModelAgent] 日志记录失败: " + e.getMessage());
+        }
     }
 
     @SuppressWarnings("unchecked")
-    public String callDeepSeek(Match match) {
-        String matchData = dataCollectAgent.collect(match);
+    private String extractContent(Map<String, Object> responseBody) {
+        if (responseBody == null || !responseBody.containsKey("choices")) return null;
+        List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
+        if (choices == null || choices.isEmpty()) return null;
+        Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+        if (message == null) return null;
+        return (String) message.get("content");
+    }
 
-        String systemPrompt = "你是一名专业的体育赛事分析师。请根据提供的比赛数据，生成一份详细的赛后复盘报告。"
+    private boolean isContentValid(String content) {
+        if (content == null || content.trim().isEmpty()) return false;
+        String[] errorIndicators = {"错误", "error", "Error", "失败", "无法", "API", "api key"};
+        for (String indicator : errorIndicators) {
+            if (content.contains(indicator) && content.length() < 50) return false;
+        }
+        return true;
+    }
+
+    private String buildDefaultSystemPrompt() {
+        return "你是一名专业的体育赛事分析师。请根据提供的比赛数据，生成一份详细的赛后复盘报告。"
                 + "报告应包含：1）比赛结果概述 2）关键球员表现分析 3）关键事件回顾 "
                 + "4）胜负原因深度分析 5）针对性改进建议。请使用专业但易懂的中文分析。";
+    }
 
-        String userPrompt = "以下是比赛数据，请生成赛后复盘报告：\n\n" + matchData;
-
-        String url = baseUrl + "/chat/completions";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(apiKey);
-
-        Map<String, Object> body = Map.of(
-                "model", model,
-                "messages", List.of(
-                        Map.of("role", "system", "content", systemPrompt),
-                        Map.of("role", "user", "content", userPrompt)
-                ),
-                "temperature", 0.7,
-                "max_tokens", 2000
-        );
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
-        try {
-            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
-            Map<String, Object> responseBody = response.getBody();
-            if (responseBody != null && responseBody.containsKey("choices")) {
-                List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
-                if (!choices.isEmpty()) {
-                    Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-                    return (String) message.get("content");
-                }
-            }
-            return "AI 模型返回结果为空，降级使用本地规则生成。";
-        } catch (Exception e) {
-            System.err.println("[RemoteModelAgent] DeepSeek API 调用失败: " + e.getMessage());
-            return null;
+    private String buildUserPrompt(Match match, String matchData) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("以下是比赛的结构化数据，请基于这些数据进行分析：\n\n");
+        sb.append("【赛事类型】").append(match.getSportType()).append("\n");
+        sb.append("【比赛状态】").append(match.getStatus()).append("\n");
+        if (match.getHomeTeam() != null && match.getAwayTeam() != null) {
+            sb.append("【主队】").append(match.getHomeTeam().getTeamName())
+              .append(" （").append(match.getHomeTeam().getScore()).append("分）\n");
+            sb.append("【客队】").append(match.getAwayTeam().getTeamName())
+              .append(" （").append(match.getAwayTeam().getScore()).append("分）\n");
         }
+        sb.append("【当前时间】").append(java.time.LocalDateTime.now()).append("\n\n");
+        sb.append("【详细数据】\n").append(matchData);
+        return sb.toString();
     }
 }

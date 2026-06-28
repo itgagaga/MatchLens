@@ -75,6 +75,23 @@ CREATE TABLE t_player_statistics (
     UNIQUE KEY uk_player_match_stat (player_id, match_id, stat_key)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- AI 调用日志表
+DROP TABLE IF EXISTS t_ai_call_log;
+CREATE TABLE t_ai_call_log (
+    id              VARCHAR(36)  PRIMARY KEY,
+    agent_type      VARCHAR(50)  NOT NULL COMMENT 'AI Agent 类型：SITUATION_ANALYSIS/REVIEW_REPORT',
+    match_id        VARCHAR(36)  COMMENT '关联比赛 ID',
+    prompt          TEXT         COMMENT '发送给 AI 的 prompt',
+    response        TEXT         COMMENT 'AI 返回的内容（成功时）',
+    success         TINYINT      NOT NULL DEFAULT 0 COMMENT '是否成功：1=成功，0=失败',
+    error_message   VARCHAR(500) COMMENT '失败原因（失败时）',
+    response_time_ms BIGINT      COMMENT '响应耗时（毫秒）',
+    call_time       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '调用时间',
+    INDEX idx_match_id (match_id),
+    INDEX idx_agent_type (agent_type),
+    INDEX idx_call_time (call_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 -- ============================================================
 -- 2. 插入示例数据 —— 篮球赛（完整演示）

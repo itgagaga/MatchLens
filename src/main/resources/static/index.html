@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatchLens 体育赛事态势分析系统</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>MatchLens 体育赛事数据智能统计与态势分析系统</h1>
+      <p>多赛事统计 &middot; 设计模式驱动 &middot; AI Agent 态势分析</p>
+    </div>
+    <div class="header-actions">
+      <button id="refreshListBtn">刷新列表</button>
+      <button id="refreshBtn">刷新当前比赛</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- 左侧边栏 -->
+    <aside class="sidebar">
+      <section class="card">
+        <h2>创建比赛</h2>
+        <form id="createMatchForm">
+          <div class="form-group">
+            <label for="matchName">比赛名称</label>
+            <input id="matchName" placeholder="例如：湖人 vs 勇士" />
+          </div>
+          <div class="form-group">
+            <label for="sportType">赛事类型</label>
+            <select id="sportType"></select>
+          </div>
+          <button type="submit" class="btn-block">创建比赛</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>比赛列表</h2>
+        <div id="matchList" class="match-list">
+          <p class="empty">加载中...</p>
+        </div>
+      </section>
+    </aside>
+
+    <!-- 右侧主区域 -->
+    <section class="content">
+      <!-- 比赛概览 -->
+      <section class="card">
+        <h2>比赛概览与比分板</h2>
+        <div id="matchOverview">
+          <p class="empty">请从左侧选择一场比赛。</p>
+        </div>
+      </section>
+
+      <!-- 队伍与球员配置 -->
+      <section class="card">
+        <h2>队伍与球员配置</h2>
+        <div id="setTeamsForm">
+          <p class="empty">请先选择比赛。</p>
+        </div>
+        <div id="playerSection"></div>
+      </section>
+
+      <!-- 比赛状态控制 -->
+      <section class="card">
+        <h2>比赛状态控制</h2>
+        <div id="statusActions">
+          <p class="empty">请先选择比赛。</p>
+        </div>
+      </section>
+
+      <!-- 赛事事件录入 -->
+      <section class="card">
+        <h2>赛事事件录入</h2>
+        <div id="eventFormArea">
+          <p class="empty">请先选择比赛。</p>
+        </div>
+      </section>
+
+      <!-- 事件时间线 -->
+      <section class="card">
+        <h2>事件时间线</h2>
+        <div id="eventTimeline">
+          <p class="empty">暂无事件记录。</p>
+        </div>
+      </section>
+
+      <!-- 实时统计 -->
+      <section class="card">
+        <h2>实时统计</h2>
+        <div id="statisticsPanel">
+          <p class="empty">暂无统计数据，请先录入事件。</p>
+        </div>
+      </section>
+
+      <!-- 实时态势分析 -->
+      <section class="card report-area">
+        <h2>实时态势分析</h2>
+        <button id="analysisBtn">生成 / 刷新态势分析</button>
+        <pre id="analysisText">点击上方按钮生成实时态势分析。</pre>
+      </section>
+
+      <!-- 赛后复盘报告 -->
+      <section class="card report-area">
+        <h2>赛后复盘报告</h2>
+        <button id="reportBtn" class="btn-success">生成赛后复盘</button>
+        <pre id="reportText">点击上方按钮生成赛后复盘报告。</pre>
+      </section>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="./js/constants.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/render.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>

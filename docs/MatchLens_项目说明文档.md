@@ -363,7 +363,7 @@ AI Agent 封装层
 
 ---
 
-## 八、Java 包结构设计
+## 八、Java 包大致结构设计
 
 ```text
 matchlens
@@ -426,7 +426,7 @@ matchlens
 ├── repository
 │   └── MatchRepository.java
 │
-└── Main.java
+└── MatchLensApplication.java
 ```
 
 ---
