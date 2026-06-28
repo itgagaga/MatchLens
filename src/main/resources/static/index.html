@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MatchLens 体育赛事态势分析系统</title>
   <link rel="stylesheet" href="./css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
   <header class="app-header">
@@ -13,11 +14,15 @@
       <p>多赛事统计 &middot; 设计模式驱动 &middot; AI Agent 态势分析</p>
     </div>
     <div class="header-actions">
+      <button id="tabMatchBtn" class="tab-btn active" onclick="switchTab('match')">比赛管理</button>
+      <button id="tabPlayerBtn" class="tab-btn" onclick="switchTab('player')">球员管理</button>
       <button id="refreshListBtn">刷新列表</button>
       <button id="refreshBtn">刷新当前比赛</button>
     </div>
   </header>
 
+  <!-- 比赛管理区域 -->
+  <div id="matchSection">
   <main class="layout">
     <!-- 左侧边栏 -->
     <aside class="sidebar">
@@ -99,17 +104,73 @@
       <section class="card report-area">
         <h2>实时态势分析</h2>
         <button id="analysisBtn">生成 / 刷新态势分析</button>
-        <pre id="analysisText">点击上方按钮生成实时态势分析。</pre>
+        <div id="analysisText" class="markdown-body"><p>点击上方按钮生成实时态势分析。</p></div>
       </section>
 
       <!-- 赛后复盘报告 -->
       <section class="card report-area">
         <h2>赛后复盘报告</h2>
         <button id="reportBtn" class="btn-success">生成赛后复盘</button>
-        <pre id="reportText">点击上方按钮生成赛后复盘报告。</pre>
+        <div id="reportText" class="markdown-body"><p>点击上方按钮生成赛后复盘报告。</p></div>
       </section>
     </section>
   </main>
+  </div>
+
+  <!-- 球员管理区域 -->
+  <div id="playerMgmtSection" class="player-management" style="display:none;">
+    <div class="player-mgmt-layout">
+      <!-- 左侧：筛选 + 球员列表 -->
+      <aside class="sidebar">
+        <section class="card">
+          <h2>筛选条件</h2>
+          <div class="form-group">
+            <label>按队伍筛选</label>
+            <select id="playerTeamFilter" onchange="handlePlayerTeamFilter()">
+              <option value="">全部队伍</option>
+            </select>
+          </div>
+          <button class="btn-block" onclick="handleShowAddPlayer()">新增球员</button>
+        </section>
+
+        <section class="card">
+          <h2>球员列表</h2>
+          <div id="playerList" class="match-list">
+            <p class="empty">加载中...</p>
+          </div>
+        </section>
+      </aside>
+
+      <!-- 右侧：详情/编辑/事件/统计 -->
+      <section class="content">
+        <section class="card">
+          <h2>球员信息</h2>
+          <div id="playerDetail">
+            <p class="empty">请从左侧选择一位球员。</p>
+          </div>
+        </section>
+
+        <section class="card" id="playerFormCard" style="display:none;">
+          <h2 id="playerFormTitle">新增球员</h2>
+          <div id="playerFormArea"></div>
+        </section>
+
+        <section class="card">
+          <h2>球员比赛事件</h2>
+          <div id="playerEventsPanel">
+            <p class="empty">请先选择球员。</p>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>球员统计数据</h2>
+          <div id="playerStatsPanel">
+            <p class="empty">请先选择球员。</p>
+          </div>
+        </section>
+      </section>
+    </div>
+  </div>
 
   <div id="toast" class="toast"></div>
 

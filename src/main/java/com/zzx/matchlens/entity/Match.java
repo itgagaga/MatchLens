@@ -57,6 +57,19 @@ public class Match {
         events.add(event);
     }
 
+    public boolean removeEvent(String eventId) {
+        return events.removeIf(e -> e.getEventId().equals(eventId));
+    }
+
+    public void clearPlayerStatistics() {
+        if (homeTeam != null && homeTeam.getPlayers() != null) {
+            homeTeam.getPlayers().forEach(p -> p.getStatistics().clear());
+        }
+        if (awayTeam != null && awayTeam.getPlayers() != null) {
+            awayTeam.getPlayers().forEach(p -> p.getStatistics().clear());
+        }
+    }
+
     public Result<String> start() {
         return state.start(this);
     }

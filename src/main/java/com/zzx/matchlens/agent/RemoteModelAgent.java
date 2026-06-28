@@ -6,11 +6,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.ObjectMapper;
 
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.SocketTimeoutException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 @Component
 public class RemoteModelAgent implements AiAgent {
@@ -35,6 +41,7 @@ public class RemoteModelAgent implements AiAgent {
 
     private final DataCollectAgent dataCollectAgent;
     private final AiCallLogService aiCallLogService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private RestTemplate restTemplate;
 
@@ -142,6 +149,90 @@ public class RemoteModelAgent implements AiAgent {
         AiAgentResponse resp = AiAgentResponse.failure(errorMsg, totalTime, agentType, match.getMatchId());
         logResponse(resp, fullPrompt);
         return resp;
+    }
+
+    @SuppressWarnings("unchecked")
+    public AiAgentResponse streamChat(Match match, String systemPrompt, Consumer<String> onChunk) {
+        if (apiKey == null || apiKey.isBlank()) {
+            return AiAgentResponse.failure("API Key 未配置", 0, AiAgentType.SITUATION_ANALYSIS, match.getMatchId());
+        }
+
+        String matchData = dataCollectAgent.collect(match);
+        String userPrompt = buildUserPrompt(match, matchData);
+        long start = System.currentTimeMillis();
+
+        try {
+            String url = baseUrl + "/chat/completions";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(apiKey);
+
+            Map<String, Object> body = Map.of(
+                    "model", model,
+                    "messages", List.of(
+                            Map.of("role", "system", "content", systemPrompt),
+                            Map.of("role", "user", "content", userPrompt)
+                    ),
+                    "temperature", 0.7,
+                    "max_tokens", 2000,
+                    "stream", true
+            );
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+            org.springframework.http.client.SimpleClientHttpRequestFactory streamFactory =
+                    new org.springframework.http.client.SimpleClientHttpRequestFactory();
+            streamFactory.setConnectTimeout(connectTimeout);
+            streamFactory.setReadTimeout(readTimeout * 3);
+            RestTemplate streamRestTemplate = new RestTemplate(streamFactory);
+
+            ResponseEntity<org.springframework.core.io.Resource> response = streamRestTemplate.exchange(
+                    url, HttpMethod.POST, request, org.springframework.core.io.Resource.class);
+
+            org.springframework.core.io.Resource resource = response.getBody();
+            if (resource == null) {
+                return AiAgentResponse.failure("流式响应为空", System.currentTimeMillis() - start,
+                        AiAgentType.SITUATION_ANALYSIS, match.getMatchId());
+            }
+
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (!line.startsWith("data:")) continue;
+                    String data = line.substring(5).trim();
+                    if ("[DONE]".equals(data)) break;
+
+                    try {
+                        Map<String, Object> chunk = objectMapper.readValue(data, Map.class);
+                        List<Map<String, Object>> choices = (List<Map<String, Object>>) chunk.get("choices");
+                        if (choices != null && !choices.isEmpty()) {
+                            Map<String, Object> delta = (Map<String, Object>) choices.get(0).get("delta");
+                            if (delta != null && delta.containsKey("content")) {
+                                String content = (String) delta.get("content");
+                                if (content != null) {
+                                    onChunk.accept(content);
+                                }
+                            }
+                        }
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+
+            long elapsed = System.currentTimeMillis() - start;
+            return AiAgentResponse.success("[streamed]", elapsed, AiAgentType.SITUATION_ANALYSIS, match.getMatchId());
+
+        } catch (Exception e) {
+            long elapsed = System.currentTimeMillis() - start;
+            String errorMsg = "流式 AI 调用失败: " + e.getMessage();
+            if (e.getCause() instanceof SocketTimeoutException) {
+                errorMsg = "流式 AI 调用超时";
+            }
+            System.err.println("[RemoteModelAgent] streamChat 失败 (" + elapsed + "ms): " + e.getMessage());
+            return AiAgentResponse.failure(errorMsg, elapsed, AiAgentType.SITUATION_ANALYSIS, match.getMatchId());
+        }
     }
 
     private void logResponse(AiAgentResponse response, String prompt) {

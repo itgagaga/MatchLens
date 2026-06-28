@@ -15,6 +15,10 @@ public class Player {
     private String playerName;
     private String teamId;
     private int number;
+    private String position;
+    private int age;
+    private int height;
+    private int weight;
 
     @TableField(exist = false)
     private Map<String, Integer> statistics = new HashMap<>();
@@ -26,6 +30,18 @@ public class Player {
         this.playerName = playerName;
         this.teamId = teamId;
         this.number = number;
+    }
+
+    public Player(String playerId, String playerName, String teamId, int number,
+                  String position, int age, int height, int weight) {
+        this.playerId = playerId;
+        this.playerName = playerName;
+        this.teamId = teamId;
+        this.number = number;
+        this.position = position;
+        this.age = age;
+        this.height = height;
+        this.weight = weight;
     }
 
     public void addStat(String key, int value) {
@@ -44,6 +60,14 @@ public class Player {
     public void setTeamId(String teamId) { this.teamId = teamId; }
     public int getNumber() { return number; }
     public void setNumber(int number) { this.number = number; }
+    public String getPosition() { return position; }
+    public void setPosition(String position) { this.position = position; }
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
+    public int getHeight() { return height; }
+    public void setHeight(int height) { this.height = height; }
+    public int getWeight() { return weight; }
+    public void setWeight(int weight) { this.weight = weight; }
     public Map<String, Integer> getStatistics() { return statistics; }
     public void setStatistics(Map<String, Integer> statistics) { this.statistics = statistics; }
 }

@@ -44,6 +44,10 @@ CREATE TABLE t_player (
     player_name VARCHAR(100) NOT NULL,
     team_id     VARCHAR(36)  NOT NULL,
     number      INT          NOT NULL COMMENT '球衣号码',
+    position    VARCHAR(30)  COMMENT '场上位置',
+    age         INT          COMMENT '年龄',
+    height      INT          COMMENT '身高(cm)',
+    weight      INT          COMMENT '体重(kg)',
     FOREIGN KEY (team_id) REFERENCES t_team(team_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -107,20 +111,20 @@ INSERT INTO t_match (match_id, match_name, sport_type, status, home_team_id, awa
 ('m001', '2026赛季篮球联赛第1轮', 'BASKETBALL', 'FINISHED', 't001', 't002', '2026-06-20 19:00:00');
 
 -- 球员 —— 烈焰队（主队）
-INSERT INTO t_player (player_id, player_name, team_id, number) VALUES
-('p001', '张明',   't001', 1),
-('p002', '李强',   't001', 7),
-('p003', '王浩',   't001', 11),
-('p004', '赵鹏',   't001', 23),
-('p005', '刘洋',   't001', 30);
+INSERT INTO t_player (player_id, player_name, team_id, number, position, age, height, weight) VALUES
+('p001', '张明',   't001', 1,  '控球后卫', 25, 188, 82),
+('p002', '李强',   't001', 7,  '得分后卫', 27, 193, 88),
+('p003', '王浩',   't001', 11, '小前锋',   24, 198, 95),
+('p004', '赵鹏',   't001', 23, '大前锋',   26, 203, 102),
+('p005', '刘洋',   't001', 30, '中锋',     28, 210, 110);
 
 -- 球员 —— 风暴队（客队）
-INSERT INTO t_player (player_id, player_name, team_id, number) VALUES
-('p006', '陈杰',   't002', 3),
-('p007', '周涛',   't002', 10),
-('p008', '吴磊',   't002', 15),
-('p009', '孙斌',   't002', 21),
-('p010', '马飞',   't002', 33);
+INSERT INTO t_player (player_id, player_name, team_id, number, position, age, height, weight) VALUES
+('p006', '陈杰',   't002', 3,  '控球后卫', 23, 185, 78),
+('p007', '周涛',   't002', 10, '得分后卫', 26, 190, 85),
+('p008', '吴磊',   't002', 15, '小前锋',   25, 196, 92),
+('p009', '孙斌',   't002', 21, '大前锋',   27, 201, 100),
+('p010', '马飞',   't002', 33, '中锋',     29, 208, 108);
 
 -- 比赛事件 —— 篮球赛完整事件流
 INSERT INTO t_match_event (event_id, match_id, team_id, player_id, event_type, score_value, event_time, description) VALUES
@@ -225,20 +229,20 @@ INSERT INTO t_match (match_id, match_name, sport_type, status, home_team_id, awa
 ('m002', '2026赛季足球联赛第1轮', 'FOOTBALL', 'FINISHED', 't003', 't004', '2026-06-21 15:00:00');
 
 -- 球员 —— 青龙队
-INSERT INTO t_player (player_id, player_name, team_id, number) VALUES
-('p011', '林峰',   't003', 1),
-('p012', '黄磊',   't003', 5),
-('p013', '杨帆',   't003', 9),
-('p014', '徐亮',   't003', 10),
-('p015', '何伟',   't003', 7);
+INSERT INTO t_player (player_id, player_name, team_id, number, position, age, height, weight) VALUES
+('p011', '林峰',   't003', 1,  '门将',   28, 190, 85),
+('p012', '黄磊',   't003', 5,  '后卫',   26, 183, 78),
+('p013', '杨帆',   't003', 9,  '前锋',   24, 180, 75),
+('p014', '徐亮',   't003', 10, '中场',   25, 178, 72),
+('p015', '何伟',   't003', 7,  '中场',   27, 182, 76);
 
 -- 球员 —— 白虎队
-INSERT INTO t_player (player_id, player_name, team_id, number) VALUES
-('p016', '郑凯',   't004', 1),
-('p017', '罗杰',   't004', 4),
-('p018', '唐浩',   't004', 8),
-('p019', '韩超',   't004', 11),
-('p020', '冯鑫',   't004', 14);
+INSERT INTO t_player (player_id, player_name, team_id, number, position, age, height, weight) VALUES
+('p016', '郑凯',   't004', 1,  '门将',   29, 192, 88),
+('p017', '罗杰',   't004', 4,  '后卫',   25, 185, 80),
+('p018', '唐浩',   't004', 8,  '中场',   26, 179, 74),
+('p019', '韩超',   't004', 11, '前锋',   23, 181, 77),
+('p020', '冯鑫',   't004', 14, '后卫',   27, 184, 79);
 
 -- 比赛事件 —— 足球赛
 INSERT INTO t_match_event (event_id, match_id, team_id, player_id, event_type, score_value, event_time, description) VALUES
@@ -282,18 +286,18 @@ INSERT INTO t_match (match_id, match_name, sport_type, status, home_team_id, awa
 ('m003', '2026赛季排球联赛第1轮', 'VOLLEYBALL', 'FINISHED', 't005', 't006', '2026-06-22 18:00:00');
 
 -- 球员 —— 闪电队
-INSERT INTO t_player (player_id, player_name, team_id, number) VALUES
-('p021', '田宇',   't005', 1),
-('p022', '贺磊',   't005', 5),
-('p023', '邓超',   't005', 8),
-('p024', '彭涛',   't005', 12);
+INSERT INTO t_player (player_id, player_name, team_id, number, position, age, height, weight) VALUES
+('p021', '田宇',   't005', 1,  '主攻手', 24, 195, 88),
+('p022', '贺磊',   't005', 5,  '副攻手', 26, 198, 92),
+('p023', '邓超',   't005', 8,  '接应',   25, 196, 90),
+('p024', '彭涛',   't005', 12, '二传手', 27, 190, 82);
 
 -- 球员 —— 雷霆队
-INSERT INTO t_player (player_id, player_name, team_id, number) VALUES
-('p025', '谢斌',   't006', 2),
-('p026', '苏杰',   't006', 6),
-('p027', '魏亮',   't006', 9),
-('p028', '秦浩',   't006', 14);
+INSERT INTO t_player (player_id, player_name, team_id, number, position, age, height, weight) VALUES
+('p025', '谢斌',   't006', 2,  '主攻手', 23, 193, 85),
+('p026', '苏杰',   't006', 6,  '副攻手', 25, 197, 91),
+('p027', '魏亮',   't006', 9,  '接应',   24, 194, 87),
+('p028', '秦浩',   't006', 14, '二传手', 26, 189, 80);
 
 -- 比赛事件 —— 排球赛
 INSERT INTO t_match_event (event_id, match_id, team_id, player_id, event_type, score_value, event_time, description) VALUES

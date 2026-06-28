@@ -51,6 +51,23 @@ body {
   background: rgba(255, 255, 255, 0.25);
 }
 
+.tab-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+}
+
+.tab-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.tab-btn.active {
+  background: rgba(59, 130, 246, 0.6);
+  border-color: #3b82f6;
+  color: #fff;
+}
+
 /* ===== Layout ===== */
 .layout {
   display: grid;
@@ -59,6 +76,22 @@ body {
   padding: 18px;
   max-width: 1440px;
   margin: 0 auto;
+}
+
+.player-management {
+  padding: 18px;
+}
+
+.player-mgmt-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 18px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.player-detail-info {
+  font-size: 14px;
 }
 
 .sidebar,
@@ -353,6 +386,33 @@ button:disabled {
   grid-column: 1 / -1;
 }
 
+/* ===== Event Log ===== */
+.event-log-list {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 12px;
+  padding: 18px;
+  font-size: 14px;
+  line-height: 1.8;
+  max-height: 500px;
+  overflow-y: auto;
+  font-family: "Consolas", "Monaco", "Courier New", monospace;
+}
+
+.event-log-line {
+  padding: 3px 0;
+  border-bottom: 1px solid #1e293b;
+}
+
+.event-log-line:last-child {
+  border-bottom: none;
+}
+
+.event-log-line .log-prefix {
+  color: #60a5fa;
+  font-weight: 700;
+}
+
 /* ===== Timeline ===== */
 .timeline {
   margin-top: 14px;
@@ -469,18 +529,108 @@ button:disabled {
   margin-bottom: 12px;
 }
 
-pre {
-  white-space: pre-wrap;
-  word-break: break-word;
-  line-height: 1.8;
+.markdown-body {
   background: #0f172a;
   color: #e2e8f0;
   border-radius: 12px;
   padding: 18px;
-  overflow-x: auto;
   font-size: 14px;
+  line-height: 1.8;
   max-height: 500px;
   overflow-y: auto;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  color: #93c5fd;
+  margin: 24px 0 12px;
+  border-bottom: 1px solid #1e3a5f;
+  padding-bottom: 8px;
+}
+
+.markdown-body h1 { font-size: 20px; margin-top: 28px; }
+.markdown-body h2 { font-size: 18px; margin-top: 24px; }
+.markdown-body h3 { font-size: 16px; margin-top: 20px; }
+
+.markdown-body p {
+  margin: 12px 0;
+  line-height: 2;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 28px;
+  margin: 12px 0;
+}
+
+.markdown-body li {
+  margin: 8px 0;
+  line-height: 1.9;
+}
+
+.markdown-body li > ul,
+.markdown-body li > ol {
+  margin: 4px 0;
+}
+
+.markdown-body strong {
+  color: #fbbf24;
+}
+
+.markdown-body em {
+  color: #a5b4fc;
+}
+
+.markdown-body code {
+  background: #1e293b;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.markdown-body pre {
+  background: #1e293b;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.markdown-body pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown-body blockquote {
+  border-left: 3px solid #3b82f6;
+  margin: 8px 0;
+  padding: 4px 12px;
+  color: #94a3b8;
+}
+
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid #334155;
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.markdown-body th {
+  background: #1e293b;
+  color: #93c5fd;
+}
+
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid #334155;
+  margin: 16px 0;
 }
 
 /* ===== Toast ===== */
@@ -557,6 +707,73 @@ pre {
   color: #9ca3af;
   font-size: 14px;
   padding: 24px 0;
+}
+
+/* ===== Event Filter Bar ===== */
+.event-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: #f3f4f6;
+  border-radius: 8px;
+}
+
+.event-filter-bar label {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.event-filter-bar select {
+  width: auto;
+  min-width: 120px;
+}
+
+.event-filter-bar .filter-count {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-left: auto;
+}
+
+/* ===== Timeline Item Header with Actions ===== */
+.timeline-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.timeline-item-header .event-type {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1d4ed8;
+}
+
+.timeline-item-header .event-score {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.event-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+.event-actions .btn-sm {
+  padding: 3px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+/* ===== Small Button ===== */
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 6px;
 }
 
 /* ===== Responsive ===== */
