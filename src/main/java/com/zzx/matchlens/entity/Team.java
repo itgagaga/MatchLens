@@ -1,13 +1,22 @@
 package com.zzx.matchlens.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@TableName("t_team")
 public class Team {
+
+    @TableId
     private String teamId;
     private String teamName;
-    private List<Player> players = new ArrayList<>();
     private int score;
+
+    @TableField(exist = false)
+    private List<Player> players = new ArrayList<>();
 
     public Team() {}
 
@@ -31,10 +40,10 @@ public class Team {
     public void setTeamId(String teamId) { this.teamId = teamId; }
     public String getTeamName() { return teamName; }
     public void setTeamName(String teamName) { this.teamName = teamName; }
-    public List<Player> getPlayers() { return players; }
-    public void setPlayers(List<Player> players) { this.players = players; }
     public int getScore() { return score; }
     public void setScore(int score) { this.score = score; }
+    public List<Player> getPlayers() { return players; }
+    public void setPlayers(List<Player> players) { this.players = players; }
 
     public void addScore(int points) {
         this.score += points;

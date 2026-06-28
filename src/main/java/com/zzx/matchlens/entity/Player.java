@@ -1,13 +1,22 @@
 package com.zzx.matchlens.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.util.HashMap;
 import java.util.Map;
 
+@TableName("t_player")
 public class Player {
+
+    @TableId
     private String playerId;
     private String playerName;
     private String teamId;
     private int number;
+
+    @TableField(exist = false)
     private Map<String, Integer> statistics = new HashMap<>();
 
     public Player() {}

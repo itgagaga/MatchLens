@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: MatchLens
+
+  # MySQL 数据源配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/matchlens?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: "996012"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: assign_uuid
+  type-enums-package: com.zzx.matchlens.common
+
+# DeepSeek API 配置
+deepseek:
+  api-key: tp-cjuq7ljrk7z72ei6r2rkbgsfk6ygk1dylcbpxbtomgou0a04
+  base-url: https://api.deepseek.com
+  model: deepseek-chat

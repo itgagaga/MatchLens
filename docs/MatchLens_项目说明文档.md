@@ -349,13 +349,17 @@ AI Agent 封装层
 
 负责存储比赛、队伍、球员、事件和统计结果。
 
-可以采用：
+本项目采用 **MySQL 关系型数据库** 作为持久化存储，通过 Spring Data JPA 进行 ORM 映射。数据库共包含 5 张核心表：
 
-1. 内存集合；
-2. JSON 文件；
-3. 数据库。
+| 表名 | 说明 | 关键字段 |
+|---|---|---|
+| `t_match` | 比赛表 | match_id, match_name, sport_type, status, home_team_id, away_team_id |
+| `t_team` | 队伍表 | team_id, team_name, score |
+| `t_player` | 球员表 | player_id, player_name, team_id, number |
+| `t_match_event` | 比赛事件表 | event_id, match_id, team_id, player_id, event_type, score_value, event_time |
+| `t_player_statistics` | 球员统计表 | id, player_id, match_id, stat_key, stat_value |
 
-课程设计阶段建议优先使用内存集合或 JSON 文件，降低实现复杂度。
+其中 `MatchStatistics` 为运行时计算对象，不单独建表，通过聚合 `t_team`、`t_player_statistics`、`t_match_event` 的数据实时生成。
 
 ---
 
@@ -539,11 +543,142 @@ scoreDifference
 
 ---
 
-## 十、设计模式详细实现
+## 十、数据库表结构设计
 
-## 10.1 状态模式
+### 10.1 数据库选型
 
-### 10.1.1 使用位置
+本项目使用 **MySQL 8.0** 作为关系型数据库，通过 **Spring Data JPA** 实现 ORM 映射，实体类即为第九节中的通用赛事对象。
+
+### 10.2 表结构总览
+
+```text
+t_match（比赛表）
+  ├── home_team_id → t_team（主队）
+  ├── away_team_id → t_team（客队）
+  └── t_match_event（比赛事件）
+        ├── team_id → t_team
+        └── player_id → t_player
+              └── t_player_statistics（球员统计）
+                    ├── player_id → t_player
+                    └── match_id → t_match
+```
+
+### 10.3 t_match 比赛表
+
+```sql
+CREATE TABLE t_match (
+    match_id      VARCHAR(36)  PRIMARY KEY,
+    match_name    VARCHAR(100) NOT NULL,
+    sport_type    VARCHAR(20)  NOT NULL COMMENT 'BASKETBALL/FOOTBALL/VOLLEYBALL/GENERAL',
+    status        VARCHAR(20)  NOT NULL DEFAULT 'NOT_STARTED' COMMENT 'NOT_STARTED/RUNNING/PAUSED/FINISHED',
+    home_team_id  VARCHAR(36),
+    away_team_id  VARCHAR(36),
+    create_time   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+```
+
+### 10.4 t_team 队伍表
+
+```sql
+CREATE TABLE t_team (
+    team_id    VARCHAR(36)  PRIMARY KEY,
+    team_name  VARCHAR(100) NOT NULL,
+    score      INT          NOT NULL DEFAULT 0
+);
+```
+
+### 10.5 t_player 球员表
+
+```sql
+CREATE TABLE t_player (
+    player_id   VARCHAR(36)  PRIMARY KEY,
+    player_name VARCHAR(100) NOT NULL,
+    team_id     VARCHAR(36)  NOT NULL,
+    number      INT          NOT NULL COMMENT '球衣号码',
+    FOREIGN KEY (team_id) REFERENCES t_team(team_id)
+);
+```
+
+### 10.6 t_match_event 比赛事件表
+
+```sql
+CREATE TABLE t_match_event (
+    event_id    VARCHAR(36)  PRIMARY KEY,
+    match_id    VARCHAR(36)  NOT NULL,
+    team_id     VARCHAR(36)  NOT NULL,
+    player_id   VARCHAR(36)  NOT NULL,
+    event_type  VARCHAR(20)  NOT NULL COMMENT 'SCORE/FOUL/ASSIST/REBOUND/STEAL/TURNOVER/TIMEOUT等',
+    score_value INT          NOT NULL DEFAULT 0,
+    event_time  DATETIME     NOT NULL,
+    description VARCHAR(500),
+    create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (match_id)  REFERENCES t_match(match_id),
+    FOREIGN KEY (team_id)   REFERENCES t_team(team_id),
+    FOREIGN KEY (player_id) REFERENCES t_player(player_id)
+);
+```
+
+### 10.7 t_player_statistics 球员统计表
+
+球员统计采用 **Key-Value 结构**，以适配不同赛事的统计维度差异（篮球有篮板、助攻；足球有红黄牌；排球有拦网、发球得分等）。
+
+```sql
+CREATE TABLE t_player_statistics (
+    id         BIGINT       AUTO_INCREMENT PRIMARY KEY,
+    player_id  VARCHAR(36)  NOT NULL,
+    match_id   VARCHAR(36)  NOT NULL,
+    stat_key   VARCHAR(30)  NOT NULL COMMENT '统计维度：SCORE/FOUL/ASSIST/REBOUND/STEAL等',
+    stat_value INT          NOT NULL DEFAULT 0,
+    FOREIGN KEY (player_id) REFERENCES t_player(player_id),
+    FOREIGN KEY (match_id)  REFERENCES t_match(match_id),
+    UNIQUE KEY uk_player_match_stat (player_id, match_id, stat_key)
+);
+```
+
+### 10.8 ER 关系图
+
+```text
+┌──────────────────────┐         ┌──────────────────────┐
+│       t_match        │         │       t_team         │
+├──────────────────────┤         ├──────────────────────┤
+│ PK match_id          │         │ PK team_id           │
+│    match_name        │         │    team_name         │
+│    sport_type        │         │    score             │
+│    status            │         └──────────┬───────────┘
+│ FK home_team_id ─────┼────────→           │
+│ FK away_team_id ─────┼────────→           │
+│    create_time       │         ┌──────────┴───────────┐
+│    update_time       │         │      t_player        │
+└──────────┬───────────┘         ├──────────────────────┤
+           │                     │ PK player_id         │
+           │                     │    player_name       │
+           │                     │ FK team_id ──────────┤
+           │                     │    number            │
+           │                     └──────────┬───────────┘
+           │                                │
+┌──────────┴───────────┐         ┌──────────┴───────────┐
+│   t_match_event      │         │ t_player_statistics  │
+├──────────────────────┤         ├──────────────────────┤
+│ PK event_id          │         │ PK id (AUTO_INC)     │
+│ FK match_id ─────────┤         │ FK player_id ────────┤
+│ FK team_id ──────────┤         │ FK match_id ─────────┤
+│ FK player_id ────────┤         │    stat_key          │
+│    event_type        │         │    stat_value        │
+│    score_value       │         └──────────────────────┘
+│    event_time        │
+│    description       │
+│    create_time       │
+└──────────────────────┘
+```
+
+---
+
+## 十一、设计模式详细实现
+
+## 11.1 状态模式
+
+### 11.1.1 使用位置
 
 状态模式用于比赛状态管理。
 
@@ -554,7 +689,7 @@ scoreDifference
 3. 暂停中；
 4. 已结束。
 
-### 10.1.2 解决的问题
+### 11.1.2 解决的问题
 
 如果不使用状态模式，比赛状态判断会散落在业务代码中，例如：
 
@@ -567,7 +702,7 @@ else if (status == FINISHED) { ... }
 
 随着功能增加，代码会变得混乱。状态模式将不同状态下的行为封装到独立类中，可以避免比赛状态错乱。
 
-### 10.1.3 状态行为设计
+### 11.1.3 状态行为设计
 
 | 状态 | 允许操作 | 禁止操作 |
 |---|---|---|
@@ -578,13 +713,13 @@ else if (status == FINISHED) { ... }
 
 ---
 
-## 10.2 责任链模式
+## 11.2 责任链模式
 
-### 10.2.1 使用位置
+### 11.2.1 使用位置
 
 责任链模式用于比赛事件录入前的数据校验。
 
-### 10.2.2 校验流程
+### 11.2.2 校验流程
 
 ```text
 基础数据校验
@@ -598,7 +733,7 @@ else if (status == FINISHED) { ... }
 比分合法性校验
 ```
 
-### 10.2.3 校验规则示例
+### 11.2.3 校验规则示例
 
 1. 比赛必须存在；
 2. 当前状态必须允许录入事件；
@@ -609,19 +744,19 @@ else if (status == FINISHED) { ... }
 7. 足球进球得分只能是 1；
 8. 已结束比赛不能继续录入事件。
 
-### 10.2.4 解决的问题
+### 11.2.4 解决的问题
 
 责任链模式将复杂校验逻辑拆分为多个处理器，避免把所有校验都写在一个方法中，提升可维护性和扩展性。
 
 ---
 
-## 10.3 策略模式
+## 11.3 策略模式
 
-### 10.3.1 使用位置
+### 11.3.1 使用位置
 
 策略模式用于不同赛事的态势分析。
 
-### 10.3.2 策略类设计
+### 11.3.2 策略类设计
 
 ```text
 AnalysisStrategy
@@ -631,7 +766,7 @@ AnalysisStrategy
 └── GeneralAnalysisStrategy
 ```
 
-### 10.3.3 各赛事策略职责
+### 11.3.3 各赛事策略职责
 
 #### 篮球分析策略
 
@@ -675,19 +810,19 @@ AnalysisStrategy
 3. 分差；
 4. 关键事件数量。
 
-### 10.3.4 解决的问题
+### 11.3.4 解决的问题
 
 策略模式让系统可以根据 `SportType` 动态选择不同赛事分析规则。后续新增赛事时，只需要新增一个策略类，不需要修改核心业务代码。
 
 ---
 
-## 10.4 观察者模式
+## 11.4 观察者模式
 
-### 10.4.1 使用位置
+### 11.4.1 使用位置
 
 观察者模式用于比赛事件发生后的模块联动更新。
 
-### 10.4.2 观察者设计
+### 11.4.2 观察者设计
 
 ```text
 MatchObserver
@@ -697,7 +832,7 @@ MatchObserver
 └── ReportObserver
 ```
 
-### 10.4.3 事件联动流程
+### 11.4.3 事件联动流程
 
 ```text
 录入比赛事件
@@ -717,15 +852,15 @@ MatchObserver
 复盘记录更新
 ```
 
-### 10.4.4 解决的问题
+### 11.4.4 解决的问题
 
 观察者模式可以避免业务模块之间直接调用，使比分板、统计、预警、复盘等模块在事件变化后自动更新，降低模块耦合。
 
 ---
 
-## 十一、AI Agent 模块设计
+## 十二、AI Agent 模块设计
 
-### 11.1 AI Agent 模块定位
+### 12.1 AI Agent 模块定位
 
 本项目中的 AI Agent 不是指开发过程中使用的聊天工具，而是系统内部的业务模块。
 
@@ -736,7 +871,7 @@ AI Agent 模块负责：
 3. 生成赛后复盘；
 4. 输出报告文本。
 
-### 11.2 Agent 接口设计
+### 12.2 Agent 接口设计
 
 ```java
 public interface AiAgent {
@@ -744,7 +879,7 @@ public interface AiAgent {
 }
 ```
 
-### 11.3 Agent 类型设计
+### 12.3 Agent 类型设计
 
 ```text
 DataCollectAgent
@@ -754,7 +889,7 @@ LocalRuleAgent
 RemoteModelAgent
 ```
 
-### 11.4 各 Agent 职责
+### 12.4 各 Agent 职责
 
 #### DataCollectAgent
 
@@ -776,11 +911,11 @@ RemoteModelAgent
 
 预留真实大模型 API 调用入口，后续可以替换 `LocalRuleAgent`。
 
-### 11.5 是否必须调用真实大模型 API
+### 12.5 是否必须调用真实大模型 API
 
 需要
 
-### 11.6 Agent 调用流程
+### 12.6 Agent 调用流程
 
 ```text
 比赛事件数据
@@ -798,9 +933,9 @@ ReportService 输出报告
 
 ---
 
-## 十二、系统核心业务流程
+## 十三、系统核心业务流程
 
-### 12.1 比赛创建流程
+### 13.1 比赛创建流程
 
 ```text
 用户创建比赛
@@ -814,7 +949,7 @@ ReportService 输出报告
 保存比赛信息
 ```
 
-### 12.2 事件录入流程
+### 13.2 事件录入流程
 
 ```text
 用户录入比赛事件
@@ -834,7 +969,7 @@ EventService 接收事件
 生成实时态势分析
 ```
 
-### 12.3 态势分析流程
+### 13.3 态势分析流程
 
 ```text
 获取当前比赛数据
@@ -848,7 +983,7 @@ SituationAnalysisAgent 组织分析文本
 返回分析结果
 ```
 
-### 12.4 赛后复盘流程
+### 13.4 赛后复盘流程
 
 ```text
 比赛结束
@@ -864,11 +999,11 @@ ReportService 输出完整报告
 
 ---
 
-## 十三、最小可完成版本
+## 十四、最小可完成版本
 
 为了保证项目可完成，本项目建议先实现最小可运行版本。
 
-### 13.1 必做功能
+### 14.1 必做功能
 
 1. 创建比赛；
 2. 选择赛事类型；
@@ -883,7 +1018,7 @@ ReportService 输出完整报告
 11. 结束比赛；
 12. 生成赛后复盘。
 
-### 13.2 篮球完整实现
+### 14.2 篮球完整实现
 
 篮球完整实现以下事件：
 
@@ -893,7 +1028,7 @@ ReportService 输出完整报告
 4. 篮板；
 5. 暂停。
 
-### 13.3 足球轻量实现
+### 14.3 足球轻量实现
 
 足球轻量实现以下事件：
 
@@ -903,7 +1038,7 @@ ReportService 输出完整报告
 4. 红牌；
 5. 换人。
 
-### 13.4 排球轻量实现
+### 14.4 排球轻量实现
 
 排球轻量实现以下事件：
 
@@ -917,7 +1052,7 @@ ReportService 输出完整报告
 
 ## 项目总结
 
-MatchLens 体育赛事数据智能统计与态势分析系统采用通用赛事模型作为核心基础，避免将系统写死为篮球专用系统。系统以篮球作为完整演示赛事，实现比赛创建、事件录入、数据统计、态势分析和赛后复盘；同时通过足球和排球的轻量策略适配，体现多赛事扩展能力。
+MatchLens 体育赛事数据智能统计与态势分析系统采用通用赛事模型作为核心基础，避免将系统写死为篮球专用系统。系统以 MySQL 作为持久化存储，通过 Spring Data JPA 实现 ORM 映射，包含比赛、队伍、球员、事件、球员统计 5 张核心表。系统以篮球作为完整演示赛事，实现比赛创建、事件录入、数据统计、态势分析和赛后复盘；同时通过足球和排球的轻量策略适配，体现多赛事扩展能力。
 
 系统通过状态模式管理比赛状态，避免比赛状态错乱；通过责任链模式校验比赛事件，避免统计规则混乱；通过策略模式适配不同赛事分析规则，实现多赛事扩展；通过观察者模式实现比赛事件发生后的比分、统计、预警和复盘联动更新。
 

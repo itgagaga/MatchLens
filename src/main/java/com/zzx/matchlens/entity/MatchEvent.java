@@ -1,10 +1,15 @@
 package com.zzx.matchlens.entity;
 
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.zzx.matchlens.common.EventType;
 
 import java.time.LocalDateTime;
 
+@TableName("t_match_event")
 public class MatchEvent {
+
+    @TableId
     private String eventId;
     private String matchId;
     private String teamId;

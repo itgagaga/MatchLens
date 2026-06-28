@@ -1,5 +1,8 @@
 package com.zzx.matchlens.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.zzx.matchlens.common.MatchStatus;
 import com.zzx.matchlens.common.Result;
 import com.zzx.matchlens.common.SportType;
@@ -7,18 +10,36 @@ import com.zzx.matchlens.state.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@TableName("t_match")
 public class Match {
+
+    @TableId
     private String matchId;
     private String matchName;
     private SportType sportType;
-    private Team homeTeam;
-    private Team awayTeam;
-    private MatchStatus status = MatchStatus.NOT_STARTED;
+    private MatchStatus status;
+    private String homeTeamId;
+    private String awayTeamId;
+    private LocalDateTime createTime;
+    private LocalDateTime updateTime;
+
+    @TableField(exist = false)
     private transient MatchState state = new NotStartedState();
+
+    @TableField(exist = false)
+    private Team homeTeam;
+
+    @TableField(exist = false)
+    private Team awayTeam;
+
+    @TableField(exist = false)
     private List<MatchEvent> events = new ArrayList<>();
+
+    @TableField(exist = false)
     private MatchStatistics statistics = new MatchStatistics();
 
     public Match() {}
@@ -27,6 +48,9 @@ public class Match {
         this.matchId = matchId;
         this.matchName = matchName;
         this.sportType = sportType;
+        this.status = MatchStatus.NOT_STARTED;
+        this.createTime = LocalDateTime.now();
+        this.updateTime = LocalDateTime.now();
     }
 
     public void addEvent(MatchEvent event) {
@@ -62,6 +86,10 @@ public class Match {
     }
 
     private void syncState() {
+        if (this.status == null) {
+            this.state = new NotStartedState();
+            return;
+        }
         this.state = switch (status) {
             case NOT_STARTED -> new NotStartedState();
             case RUNNING -> new RunningState();
@@ -80,10 +108,26 @@ public class Match {
     public void setMatchName(String matchName) { this.matchName = matchName; }
     public SportType getSportType() { return sportType; }
     public void setSportType(SportType sportType) { this.sportType = sportType; }
+    public String getHomeTeamId() { return homeTeamId; }
+    public void setHomeTeamId(String homeTeamId) { this.homeTeamId = homeTeamId; }
+    public String getAwayTeamId() { return awayTeamId; }
+    public void setAwayTeamId(String awayTeamId) { this.awayTeamId = awayTeamId; }
+    public LocalDateTime getCreateTime() { return createTime; }
+    public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
+    public LocalDateTime getUpdateTime() { return updateTime; }
+    public void setUpdateTime(LocalDateTime updateTime) { this.updateTime = updateTime; }
+
     public Team getHomeTeam() { return homeTeam; }
-    public void setHomeTeam(Team homeTeam) { this.homeTeam = homeTeam; }
+    public void setHomeTeam(Team homeTeam) {
+        this.homeTeam = homeTeam;
+        if (homeTeam != null) this.homeTeamId = homeTeam.getTeamId();
+    }
     public Team getAwayTeam() { return awayTeam; }
-    public void setAwayTeam(Team awayTeam) { this.awayTeam = awayTeam; }
+    public void setAwayTeam(Team awayTeam) {
+        this.awayTeam = awayTeam;
+        if (awayTeam != null) this.awayTeamId = awayTeam.getTeamId();
+    }
+
     public MatchStatus getStatus() { return status; }
     public void setStatus(MatchStatus status) {
         this.status = status;
