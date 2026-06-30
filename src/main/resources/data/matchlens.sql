@@ -12,6 +12,7 @@ USE matchlens;
 -- ============================================================
 
 -- 队伍表
+DROP TABLE IF EXISTS t_match_report;
 DROP TABLE IF EXISTS t_player_statistics;
 DROP TABLE IF EXISTS t_match_event;
 DROP TABLE IF EXISTS t_player;
@@ -21,7 +22,9 @@ DROP TABLE IF EXISTS t_team;
 CREATE TABLE t_team (
     team_id    VARCHAR(36)  PRIMARY KEY,
     team_name  VARCHAR(100) NOT NULL,
-    score      INT          NOT NULL DEFAULT 0
+    score      INT          NOT NULL DEFAULT 0,
+    city       VARCHAR(50)  COMMENT '所在城市',
+    coach_name VARCHAR(50)  COMMENT '教练姓名'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 比赛表
@@ -96,6 +99,21 @@ CREATE TABLE t_ai_call_log (
     INDEX idx_call_time (call_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 比赛报告表
+CREATE TABLE t_match_report (
+    report_id    VARCHAR(36)  PRIMARY KEY,
+    match_id     VARCHAR(36)  NOT NULL,
+    report_type  VARCHAR(30)  NOT NULL COMMENT 'SITUATION/REVIEW',
+    title        VARCHAR(100),
+    content      TEXT         NOT NULL,
+    generated_by VARCHAR(30)  COMMENT 'REMOTE_AI/LOCAL_RULE',
+    create_time  DATETIME     DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (match_id) REFERENCES t_match(match_id),
+    INDEX idx_match_id (match_id),
+    INDEX idx_report_type (report_type),
+    INDEX idx_create_time (create_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 -- ============================================================
 -- 2. 插入示例数据 —— 篮球赛（完整演示）
@@ -110,7 +128,7 @@ INSERT INTO t_team (team_id, team_name, score) VALUES
 INSERT INTO t_match (match_id, match_name, sport_type, status, home_team_id, away_team_id, create_time) VALUES
 ('m001', '2026赛季篮球联赛第1轮', 'BASKETBALL', 'FINISHED', 't001', 't002', '2026-06-20 19:00:00');
 
--- 球员 —— 烈焰队（主队）
+-- 球员 —— 烈焰队（甲方）
 INSERT INTO t_player (player_id, player_name, team_id, number, position, age, height, weight) VALUES
 ('p001', '张明',   't001', 1,  '控球后卫', 25, 188, 82),
 ('p002', '李强',   't001', 7,  '得分后卫', 27, 193, 88),
@@ -118,7 +136,7 @@ INSERT INTO t_player (player_id, player_name, team_id, number, position, age, he
 ('p004', '赵鹏',   't001', 23, '大前锋',   26, 203, 102),
 ('p005', '刘洋',   't001', 30, '中锋',     28, 210, 110);
 
--- 球员 —— 风暴队（客队）
+-- 球员 —— 风暴队（乙方）
 INSERT INTO t_player (player_id, player_name, team_id, number, position, age, height, weight) VALUES
 ('p006', '陈杰',   't002', 3,  '控球后卫', 23, 185, 78),
 ('p007', '周涛',   't002', 10, '得分后卫', 26, 190, 85),

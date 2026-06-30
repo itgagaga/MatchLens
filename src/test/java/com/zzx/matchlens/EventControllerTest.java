@@ -1,6 +1,6 @@
 package com.zzx.matchlens;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.zzx.matchlens.common.EventType;
 import com.zzx.matchlens.common.SportType;
 import com.zzx.matchlens.dto.*;
@@ -53,8 +53,8 @@ class EventControllerTest {
 
         // 2. 设置队伍
         SetTeamsRequest teamsReq = new SetTeamsRequest();
-        teamsReq.setHomeName("烈焰队");
-        teamsReq.setAwayName("风暴队");
+        teamsReq.setTeamAName("烈焰队");
+        teamsReq.setTeamBName("风暴队");
 
         mockMvc.perform(post("/api/matches/" + matchId + "/teams")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -71,7 +71,7 @@ class EventControllerTest {
 
         // 3. 添加球员
         AddPlayerRequest playerReq1 = new AddPlayerRequest();
-        playerReq1.setHome(true);
+        playerReq1.setTeamA(true);
         playerReq1.setPlayerName("张明");
         playerReq1.setNumber(1);
         mockMvc.perform(post("/api/matches/" + matchId + "/players")
@@ -80,7 +80,7 @@ class EventControllerTest {
                 .andExpect(status().isOk());
 
         AddPlayerRequest playerReq2 = new AddPlayerRequest();
-        playerReq2.setHome(false);
+        playerReq2.setTeamA(false);
         playerReq2.setPlayerName("陈杰");
         playerReq2.setNumber(3);
         mockMvc.perform(post("/api/matches/" + matchId + "/players")
@@ -88,7 +88,7 @@ class EventControllerTest {
                         .content(objectMapper.writeValueAsString(playerReq2)))
                 .andExpect(status().isOk());
 
-        // 获取主队球员 ID
+        // 获取甲方球员 ID
         MvcResult detailResult = mockMvc.perform(get("/api/matches/" + matchId))
                 .andExpect(status().isOk())
                 .andReturn();

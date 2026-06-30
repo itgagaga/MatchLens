@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatchLens - 比赛详情</title>
+  <link rel="stylesheet" href="./css/theme.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/pages.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html">🏆 MatchLens</a>
+    <nav class="nav">
+      <a class="nav-link" href="./index.html">首页</a>
+      <a class="nav-link" href="./matches.html">比赛管理</a>
+      <a class="nav-link" href="./teams.html">球队管理</a>
+      <a class="nav-link" href="./players.html">球员管理</a>
+      <a class="nav-link" href="./rankings.html">排行榜</a>
+      <a class="nav-link" href="./ai-logs.html">AI 日志</a>
+      <a class="nav-link" href="./reports.html">报告中心</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div id="scoreBoard"></div>
+
+    <section class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <h2 style="margin:0">比赛信息</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="btn btn-sm" id="linkAdmin" href="#">比赛设置</a>
+          <a class="btn btn-sm" id="linkAiLogs" href="#">AI 日志</a>
+          <a class="btn btn-sm btn-orange" id="linkReports" href="#">历史报告</a>
+        </div>
+      </div>
+      <div id="matchInfo" class="match-info-grid" style="margin-top:12px"></div>
+    </section>
+
+    <section class="card">
+      <h2>录入事件</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>队伍</label>
+          <select id="eventTeam" onchange="MatchDetailPage.onTeamChange()">
+            <option value="">-- 请选择队伍 --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>球员</label>
+          <select id="eventPlayer">
+            <option value="">-- 请先选择队伍 --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>事件类型</label>
+          <select id="eventType">
+            <option value="SCORE">得分</option>
+            <option value="FOUL">犯规</option>
+            <option value="ASSIST">助攻</option>
+            <option value="REBOUND">篮板</option>
+            <option value="STEAL">抢断</option>
+            <option value="TURNOVER">失误</option>
+            <option value="YELLOW_CARD">黄牌</option>
+            <option value="RED_CARD">红牌</option>
+            <option value="SUBSTITUTION">换人</option>
+            <option value="BLOCK">拦网</option>
+            <option value="SERVE_ACE">发球得分</option>
+            <option value="ERROR">失误</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>得分值</label>
+          <input type="number" id="eventScoreValue" value="0" />
+        </div>
+        <div class="form-group">
+          <label>描述</label>
+          <input type="text" id="eventDescription" placeholder="事件描述" />
+        </div>
+      </div>
+      <button class="btn" onclick="MatchDetailPage.recordEvent()" style="margin-top:10px">录入事件</button>
+    </section>
+
+    <section class="grid grid-2">
+      <section class="card">
+        <h2>事件时间线</h2>
+        <div id="eventTimeline"></div>
+      </section>
+      <section class="card">
+        <h2>实时统计</h2>
+        <div id="statisticsPanel"></div>
+      </section>
+    </section>
+
+    <section class="grid grid-2">
+      <section class="card">
+        <h2>AI 实时态势分析</h2>
+        <button class="btn btn-orange" onclick="MatchDetailPage.getAnalysis()" style="margin-bottom:12px">生成态势分析</button>
+        <button class="btn btn-sm" onclick="MatchDetailPage.streamAnalysis()" style="margin-bottom:12px">流式生成</button>
+        <div id="analysisResult" class="ai-result" style="display:none"></div>
+      </section>
+      <section class="card">
+        <h2>赛后复盘报告</h2>
+        <button class="btn btn-red" onclick="MatchDetailPage.getReviewReport()" style="margin-bottom:12px">生成赛后复盘</button>
+        <button class="btn btn-sm" onclick="MatchDetailPage.streamReport()" style="margin-bottom:12px">流式生成</button>
+        <div id="reportResult" class="ai-result" style="display:none"></div>
+      </section>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="./js/constants.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/common.js"></script>
+  <script src="./js/pages/match-detail.js"></script>
+</body>
+</html>

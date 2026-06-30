@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatchLens - 比赛设置</title>
+  <link rel="stylesheet" href="./css/theme.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/pages.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html">🏆 MatchLens</a>
+    <nav class="nav">
+      <a class="nav-link" href="./index.html">首页</a>
+      <a class="nav-link" href="./matches.html">比赛管理</a>
+      <a class="nav-link" href="./teams.html">球队管理</a>
+      <a class="nav-link" href="./players.html">球员管理</a>
+      <a class="nav-link" href="./rankings.html">排行榜</a>
+      <a class="nav-link" href="./ai-logs.html">AI 日志</a>
+      <a class="nav-link" href="./reports.html">报告中心</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <!-- 顶部：比赛基本信息 + 操作栏 -->
+    <section class="card" style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div>
+          <h1 id="pageTitle" style="margin:0 0 6px">比赛设置</h1>
+          <div id="matchMeta" style="color:var(--text-muted);font-size:14px"></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="btn btn-sm" id="linkDetail" href="#">进入详情页</a>
+          <a class="btn btn-sm" id="linkAiLogs" href="#">AI 日志</a>
+          <a class="btn btn-sm" id="linkReports" href="#">历史报告</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 修改比赛名称 -->
+    <section class="card">
+      <h2>比赛名称</h2>
+      <div class="form-row">
+        <div class="form-group" style="flex:1">
+          <input type="text" id="matchName" placeholder="输入比赛名称" />
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <button class="btn" onclick="MatchAdminPage.updateMatchName()">保存</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 设置队伍 -->
+    <section class="card">
+      <h2>设置队伍</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>甲方名称</label>
+          <input type="text" id="homeTeamName" placeholder="甲方名称" />
+        </div>
+        <div class="form-group">
+          <label>乙方名称</label>
+          <input type="text" id="awayTeamName" placeholder="乙方名称" />
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <button class="btn" onclick="MatchAdminPage.setTeams()">设置队伍</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 添加球员 -->
+    <section class="card">
+      <h2>添加球员</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>球员姓名</label>
+          <input type="text" id="playerName" placeholder="球员姓名" />
+        </div>
+        <div class="form-group">
+          <label>球衣号码</label>
+          <input type="number" id="playerNumber" placeholder="号码" />
+        </div>
+        <div class="form-group">
+          <label>所属方</label>
+          <select id="playerHome">
+            <option value="true">甲方</option>
+            <option value="false">乙方</option>
+          </select>
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <button class="btn btn-green" onclick="MatchAdminPage.addPlayer()">添加球员</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 球员列表 -->
+    <section class="grid grid-2">
+      <section class="card">
+        <h2>甲方球员</h2>
+        <div id="homePlayersList"></div>
+      </section>
+      <section class="card">
+        <h2>乙方球员</h2>
+        <div id="awayPlayersList"></div>
+      </section>
+    </section>
+
+    <!-- 比赛状态控制 -->
+    <section class="card">
+      <h2>比赛状态控制</h2>
+      <div class="action-group" id="statusControls">
+        <button class="btn btn-green" onclick="MatchAdminPage.changeStatus('start')">开始比赛</button>
+        <button class="btn btn-orange" onclick="MatchAdminPage.changeStatus('pause')">暂停</button>
+        <button class="btn" onclick="MatchAdminPage.changeStatus('resume')">恢复</button>
+        <button class="btn btn-red" onclick="MatchAdminPage.changeStatus('finish')">结束</button>
+      </div>
+    </section>
+
+    <!-- 危险操作 -->
+    <section class="card" style="border:1px solid var(--danger, #e74c3c)">
+      <h2 style="color:var(--danger, #e74c3c)">危险操作</h2>
+      <p style="color:var(--text-muted);margin-bottom:12px">删除比赛将同时删除所有关联的事件、统计和球员数据，此操作不可撤销。</p>
+      <button class="btn btn-red" onclick="MatchAdminPage.deleteMatch()">删除比赛</button>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="./js/constants.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/common.js"></script>
+  <script src="./js/pages/match-admin.js"></script>
+</body>
+</html>

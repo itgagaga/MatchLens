@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatchLens - AI 日志</title>
+  <link rel="stylesheet" href="./css/theme.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/pages.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html">🏆 MatchLens</a>
+    <nav class="nav">
+      <a class="nav-link" href="./index.html">首页</a>
+      <a class="nav-link" href="./matches.html">比赛管理</a>
+      <a class="nav-link" href="./teams.html">球队管理</a>
+      <a class="nav-link" href="./players.html">球员管理</a>
+      <a class="nav-link" href="./rankings.html">排行榜</a>
+      <a class="nav-link" href="./ai-logs.html">AI 日志</a>
+      <a class="nav-link" href="./reports.html">报告中心</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="page-hero">
+      <h1>AI 调用日志</h1>
+      <p>查询 AI 调用记录、查看 Prompt 与 Response、错误信息</p>
+    </section>
+
+    <section class="card">
+      <h2>筛选日志</h2>
+      <div class="filter-bar">
+        <select id="filterMatchId">
+          <option value="">全部比赛</option>
+        </select>
+        <select id="filterAgentType">
+          <option value="">全部 Agent</option>
+          <option value="ANALYSIS">态势分析</option>
+          <option value="REPORT">复盘报告</option>
+          <option value="DATA_COLLECT">数据采集</option>
+        </select>
+        <select id="filterSuccess">
+          <option value="">全部状态</option>
+          <option value="true">成功</option>
+          <option value="false">失败</option>
+        </select>
+        <input type="text" id="filterKeyword" placeholder="关键词搜索" style="width:160px" />
+        <button class="btn btn-sm" onclick="AiLogsPage.load()">筛选</button>
+      </div>
+    </section>
+
+    <section>
+      <div id="logList"></div>
+    </section>
+  </main>
+
+  <!-- 日志详情弹窗 -->
+  <div class="modal-overlay" id="logDetailModal">
+    <div class="modal" style="max-width:800px">
+      <h2>日志详情</h2>
+      <div id="logDetailContent"></div>
+      <div class="btn-group">
+        <button class="btn btn-sm" onclick="Common.closeModal('logDetailModal')">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="./js/constants.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/common.js"></script>
+  <script src="./js/pages/ai-logs.js"></script>
+</body>
+</html>

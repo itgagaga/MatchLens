@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatchLens - 球队管理</title>
+  <link rel="stylesheet" href="./css/theme.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/pages.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html">🏆 MatchLens</a>
+    <nav class="nav">
+      <a class="nav-link" href="./index.html">首页</a>
+      <a class="nav-link" href="./matches.html">比赛管理</a>
+      <a class="nav-link" href="./teams.html">球队管理</a>
+      <a class="nav-link" href="./players.html">球员管理</a>
+      <a class="nav-link" href="./rankings.html">排行榜</a>
+      <a class="nav-link" href="./ai-logs.html">AI 日志</a>
+      <a class="nav-link" href="./reports.html">报告中心</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="page-hero">
+      <h1>球队管理</h1>
+      <p>球队增删改查、查看球员、历史比赛</p>
+    </section>
+
+    <section class="grid grid-2">
+      <section class="card">
+        <h2 id="teamFormTitle">新增球队</h2>
+        <input type="hidden" id="editTeamId" value="" />
+        <div class="form-group">
+          <label>球队名称</label>
+          <input type="text" id="teamName" placeholder="球队名称" />
+        </div>
+        <div class="form-group">
+          <label>城市</label>
+          <input type="text" id="teamCity" placeholder="城市" />
+        </div>
+        <div class="form-group">
+          <label>教练</label>
+          <input type="text" id="teamCoach" placeholder="教练姓名" />
+        </div>
+        <div class="action-group">
+          <button class="btn btn-green" onclick="TeamsPage.saveTeam()">保存</button>
+          <button class="btn btn-sm" onclick="TeamsPage.resetForm()">重置</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>球队列表</h2>
+        <div id="teamList"></div>
+      </section>
+    </section>
+  </main>
+
+  <!-- 球员弹窗 -->
+  <div class="modal-overlay" id="playerModal">
+    <div class="modal">
+      <h2>球队球员</h2>
+      <div id="playerModalContent"></div>
+      <div class="btn-group">
+        <button class="btn btn-sm" onclick="Common.closeModal('playerModal')">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="./js/constants.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/common.js"></script>
+  <script src="./js/pages/teams.js"></script>
+</body>
+</html>

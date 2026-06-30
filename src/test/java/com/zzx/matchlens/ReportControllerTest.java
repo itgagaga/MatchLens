@@ -1,6 +1,6 @@
 package com.zzx.matchlens;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.zzx.matchlens.common.EventType;
 import com.zzx.matchlens.common.SportType;
 import com.zzx.matchlens.dto.*;
@@ -52,8 +52,8 @@ class ReportControllerTest {
 
         // 2. 设置队伍
         SetTeamsRequest teamsReq = new SetTeamsRequest();
-        teamsReq.setHomeName("烈焰队");
-        teamsReq.setAwayName("风暴队");
+        teamsReq.setTeamAName("烈焰队");
+        teamsReq.setTeamBName("风暴队");
         mockMvc.perform(post("/api/matches/" + matchId + "/teams")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(teamsReq)))
@@ -61,14 +61,14 @@ class ReportControllerTest {
 
         // 3. 添加球员
         AddPlayerRequest p1 = new AddPlayerRequest();
-        p1.setHome(true); p1.setPlayerName("张明"); p1.setNumber(1);
+        p1.setTeamA(true); p1.setPlayerName("张明"); p1.setNumber(1);
         mockMvc.perform(post("/api/matches/" + matchId + "/players")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(p1)))
                 .andExpect(status().isOk());
 
         AddPlayerRequest p2 = new AddPlayerRequest();
-        p2.setHome(false); p2.setPlayerName("陈杰"); p2.setNumber(3);
+        p2.setTeamA(false); p2.setPlayerName("陈杰"); p2.setNumber(3);
         mockMvc.perform(post("/api/matches/" + matchId + "/players")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(p2)))

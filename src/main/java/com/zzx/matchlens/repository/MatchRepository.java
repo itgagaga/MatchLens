@@ -76,7 +76,10 @@ public class MatchRepository {
             return Optional.empty();
         }
 
-        // 加载主队
+        // MyBatis-Plus 通过反射直接设置字段，不会调用 setter，需手动同步状态对象
+        match.syncState();
+
+        // 加载甲方
         if (match.getHomeTeamId() != null) {
             Team homeTeam = teamMapper.selectById(match.getHomeTeamId());
             if (homeTeam != null) {
@@ -85,7 +88,7 @@ public class MatchRepository {
             }
         }
 
-        // 加载客队
+        // 加载乙方
         if (match.getAwayTeamId() != null) {
             Team awayTeam = teamMapper.selectById(match.getAwayTeamId());
             if (awayTeam != null) {
@@ -108,10 +111,22 @@ public class MatchRepository {
     }
 
     /**
-     * 查询所有比赛（仅基础信息，不含关联数据）
+     * 查询所有比赛（含队伍信息，不含球员和事件）
      */
     public List<Match> findAll() {
-        return matchMapper.selectList(null);
+        List<Match> matches = matchMapper.selectList(null);
+        for (Match match : matches) {
+            match.syncState();
+            if (match.getHomeTeamId() != null) {
+                Team homeTeam = teamMapper.selectById(match.getHomeTeamId());
+                match.setHomeTeam(homeTeam);
+            }
+            if (match.getAwayTeamId() != null) {
+                Team awayTeam = teamMapper.selectById(match.getAwayTeamId());
+                match.setAwayTeam(awayTeam);
+            }
+        }
+        return matches;
     }
 
     /**

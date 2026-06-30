@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatchLens - 球员管理</title>
+  <link rel="stylesheet" href="./css/theme.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/pages.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html">🏆 MatchLens</a>
+    <nav class="nav">
+      <a class="nav-link" href="./index.html">首页</a>
+      <a class="nav-link" href="./matches.html">比赛管理</a>
+      <a class="nav-link" href="./teams.html">球队管理</a>
+      <a class="nav-link" href="./players.html">球员管理</a>
+      <a class="nav-link" href="./rankings.html">排行榜</a>
+      <a class="nav-link" href="./ai-logs.html">AI 日志</a>
+      <a class="nav-link" href="./reports.html">报告中心</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="page-hero">
+      <h1>球员管理</h1>
+      <p>球员增删改查、按球队筛选、查看事件和统计</p>
+    </section>
+
+    <section class="card">
+      <h2 id="playerFormTitle">新增球员</h2>
+      <input type="hidden" id="editPlayerId" value="" />
+      <div class="form-row">
+        <div class="form-group">
+          <label>球员姓名</label>
+          <input type="text" id="playerName" placeholder="球员姓名" />
+        </div>
+        <div class="form-group">
+          <label>所属球队</label>
+          <select id="playerTeamId"></select>
+        </div>
+        <div class="form-group">
+          <label>球衣号码</label>
+          <input type="number" id="playerNumber" placeholder="号码" />
+        </div>
+        <div class="form-group">
+          <label>位置</label>
+          <select id="playerPosition">
+            <option value="">请选择</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>年龄</label>
+          <input type="number" id="playerAge" placeholder="年龄" />
+        </div>
+        <div class="form-group">
+          <label>身高 (cm)</label>
+          <input type="number" id="playerHeight" placeholder="身高" />
+        </div>
+        <div class="form-group">
+          <label>体重 (kg)</label>
+          <input type="number" id="playerWeight" placeholder="体重" />
+        </div>
+      </div>
+      <div class="action-group">
+        <button class="btn btn-green" onclick="PlayersPage.savePlayer()">保存</button>
+        <button class="btn btn-sm" onclick="PlayersPage.resetForm()">重置</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>球员列表</h2>
+      <div class="filter-bar">
+        <select id="filterTeamId" onchange="PlayersPage.loadPlayers()">
+          <option value="">全部球队</option>
+        </select>
+      </div>
+      <div id="playerList"></div>
+    </section>
+  </main>
+
+  <!-- 事件/统计弹窗 -->
+  <div class="modal-overlay" id="playerDetailModal">
+    <div class="modal" style="max-width:700px">
+      <h2 id="playerDetailTitle">球员详情</h2>
+      <div id="playerDetailContent"></div>
+      <div class="btn-group">
+        <button class="btn btn-sm" onclick="Common.closeModal('playerDetailModal')">关闭</button>
+        <a class="btn btn-sm" id="linkRankings" href="./rankings.html">查看排行榜</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="./js/constants.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/common.js"></script>
+  <script src="./js/pages/players.js"></script>
+</body>
+</html>

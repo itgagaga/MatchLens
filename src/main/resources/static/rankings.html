@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MatchLens - 首页</title>
+  <title>MatchLens - 排行榜</title>
   <link rel="stylesheet" href="./css/theme.css" />
   <link rel="stylesheet" href="./css/components.css" />
   <link rel="stylesheet" href="./css/pages.css" />
@@ -24,41 +24,34 @@
 
   <main class="page">
     <section class="page-hero">
-      <h1>MatchLens 体育赛事智能分析系统</h1>
-      <p>面向多赛事的数据采集、统计分析、AI 态势研判与赛后复盘平台</p>
-    </section>
-
-    <section class="grid grid-4" id="summaryCards"></section>
-
-    <section class="grid grid-3" style="margin-bottom:24px">
-      <a class="feature-card" href="./matches.html">
-        <span class="icon">🏀</span>比赛管理
-      </a>
-      <a class="feature-card orange" href="./teams.html">
-        <span class="icon">🔥</span>球队管理
-      </a>
-      <a class="feature-card green" href="./players.html">
-        <span class="icon">⭐</span>球员管理
-      </a>
-      <a class="feature-card" href="./rankings.html">
-        <span class="icon">🏅</span>排行榜
-      </a>
-      <a class="feature-card red" href="./ai-logs.html">
-        <span class="icon">🤖</span>AI 日志
-      </a>
-      <a class="feature-card orange" href="./reports.html">
-        <span class="icon">📋</span>报告中心
-      </a>
+      <h1>球员排行榜</h1>
+      <p>得分榜、助攻榜、篮板榜、全局排行榜</p>
     </section>
 
     <section class="card">
-      <h2>最近比赛</h2>
-      <div id="recentMatches"></div>
+      <div class="filter-bar">
+        <select id="rankMode">
+          <option value="overall">全局排行榜</option>
+          <option value="match">单场排行榜</option>
+        </select>
+        <select id="rankMatchId" style="display:none">
+          <option value="">请选择比赛</option>
+        </select>
+        <select id="rankStatKey">
+          <option value="SCORE">得分</option>
+          <option value="ASSIST">助攻</option>
+          <option value="REBOUND">篮板</option>
+          <option value="FOUL">犯规</option>
+          <option value="STEAL">抢断</option>
+          <option value="TURNOVER">失误</option>
+        </select>
+        <button class="btn btn-sm" onclick="RankingsPage.load()">查询</button>
+      </div>
     </section>
 
     <section class="card">
-      <h2>AI 调用概览</h2>
-      <div id="aiOverview"></div>
+      <h2 id="rankTitle">排行榜</h2>
+      <div id="rankList"></div>
     </section>
   </main>
 
@@ -67,6 +60,6 @@
   <script src="./js/constants.js"></script>
   <script src="./js/api.js"></script>
   <script src="./js/common.js"></script>
-  <script src="./js/pages/dashboard.js"></script>
+  <script src="./js/pages/rankings.js"></script>
 </body>
 </html>

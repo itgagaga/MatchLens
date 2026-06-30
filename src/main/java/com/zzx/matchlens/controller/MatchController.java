@@ -32,17 +32,22 @@ public class MatchController {
 
     @GetMapping("/{id}")
     public Match getMatch(@PathVariable String id) {
-        return matchService.getMatch(id);
+        Match match = matchService.getMatch(id);
+        // 重算统计信息（statistics 未持久化，每次加载需从事件重新计算）
+        if (match.getHomeTeam() != null && match.getAwayTeam() != null) {
+            match.getStatistics().updateFromMatch(match);
+        }
+        return match;
     }
 
     @PostMapping("/{id}/teams")
     public Result<String> setTeams(@PathVariable String id, @RequestBody SetTeamsRequest request) {
-        return matchService.setTeams(id, request.getHomeName(), request.getAwayName());
+        return matchService.setTeams(id, request.getTeamAName(), request.getTeamBName());
     }
 
     @PostMapping("/{id}/players")
     public Result<String> addPlayer(@PathVariable String id, @RequestBody AddPlayerRequest request) {
-        return matchService.addPlayer(id, request.isHome(), request.getPlayerName(), request.getNumber());
+        return matchService.addPlayer(id, request.isTeamA(), request.getPlayerName(), request.getNumber());
     }
 
     @PostMapping("/{id}/start")
@@ -63,5 +68,15 @@ public class MatchController {
     @PostMapping("/{id}/finish")
     public Result<String> finishMatch(@PathVariable String id) {
         return matchService.finishMatch(id);
+    }
+
+    @DeleteMapping("/{id}")
+    public Result<String> deleteMatch(@PathVariable String id) {
+        return matchService.deleteMatch(id);
+    }
+
+    @PutMapping("/{id}")
+    public Result<String> updateMatchName(@PathVariable String id, @RequestBody CreateMatchRequest request) {
+        return matchService.updateMatchName(id, request.getMatchName());
     }
 }

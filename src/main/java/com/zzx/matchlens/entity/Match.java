@@ -9,6 +9,7 @@ import com.zzx.matchlens.common.SportType;
 import com.zzx.matchlens.state.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -31,9 +32,11 @@ public class Match {
     private transient MatchState state = new NotStartedState();
 
     @TableField(exist = false)
+    @JsonIgnore
     private Team homeTeam;
 
     @TableField(exist = false)
+    @JsonIgnore
     private Team awayTeam;
 
     @TableField(exist = false)
@@ -98,7 +101,7 @@ public class Match {
         return state.viewReport(this);
     }
 
-    private void syncState() {
+    public void syncState() {
         if (this.status == null) {
             this.state = new NotStartedState();
             return;
@@ -130,11 +133,13 @@ public class Match {
     public LocalDateTime getUpdateTime() { return updateTime; }
     public void setUpdateTime(LocalDateTime updateTime) { this.updateTime = updateTime; }
 
+    @JsonProperty("teamA")
     public Team getHomeTeam() { return homeTeam; }
     public void setHomeTeam(Team homeTeam) {
         this.homeTeam = homeTeam;
         if (homeTeam != null) this.homeTeamId = homeTeam.getTeamId();
     }
+    @JsonProperty("teamB")
     public Team getAwayTeam() { return awayTeam; }
     public void setAwayTeam(Team awayTeam) {
         this.awayTeam = awayTeam;

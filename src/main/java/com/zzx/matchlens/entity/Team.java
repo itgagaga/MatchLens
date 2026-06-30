@@ -14,6 +14,8 @@ public class Team {
     private String teamId;
     private String teamName;
     private int score;
+    private String city;
+    private String coachName;
 
     @TableField(exist = false)
     private List<Player> players = new ArrayList<>();
@@ -48,4 +50,9 @@ public class Team {
     public void addScore(int points) {
         this.score += points;
     }
+
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+    public String getCoachName() { return coachName; }
+    public void setCoachName(String coachName) { this.coachName = coachName; }
 }

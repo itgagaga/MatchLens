@@ -9,7 +9,7 @@ import com.zzx.matchlens.common.SportType;
 import com.zzx.matchlens.dto.*;
 import com.zzx.matchlens.entity.AiCallLog;
 import com.zzx.matchlens.mapper.AiCallLogMapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -68,15 +68,15 @@ class AiAgentFallbackTest {
                 .get("matchId").asText();
 
         SetTeamsRequest teamsReq = new SetTeamsRequest();
-        teamsReq.setHomeName("烈焰队");
-        teamsReq.setAwayName("风暴队");
+        teamsReq.setTeamAName("烈焰队");
+        teamsReq.setTeamBName("风暴队");
         mockMvc.perform(post("/api/matches/" + matchId + "/teams")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(teamsReq)))
                 .andExpect(status().isOk());
 
         AddPlayerRequest p1 = new AddPlayerRequest();
-        p1.setHome(true);
+        p1.setTeamA(true);
         p1.setPlayerName("张明");
         p1.setNumber(1);
         mockMvc.perform(post("/api/matches/" + matchId + "/players")
@@ -85,7 +85,7 @@ class AiAgentFallbackTest {
                 .andExpect(status().isOk());
 
         AddPlayerRequest p2 = new AddPlayerRequest();
-        p2.setHome(false);
+        p2.setTeamA(false);
         p2.setPlayerName("陈杰");
         p2.setNumber(3);
         mockMvc.perform(post("/api/matches/" + matchId + "/players")

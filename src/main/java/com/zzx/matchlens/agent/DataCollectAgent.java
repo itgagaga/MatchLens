@@ -28,10 +28,10 @@ public class DataCollectAgent implements AiAgent {
                     home.getTeamName(), home.getScore(),
                     away.getScore(), away.getTeamName()));
 
-            sj.add("\n--- 主队球员数据 (" + home.getTeamName() + ") ---");
+            sj.add("\n--- 甲方球员数据 (" + home.getTeamName() + ") ---");
             appendTeamPlayers(sj, home);
 
-            sj.add("\n--- 客队球员数据 (" + away.getTeamName() + ") ---");
+            sj.add("\n--- 乙方球员数据 (" + away.getTeamName() + ") ---");
             appendTeamPlayers(sj, away);
         }
 

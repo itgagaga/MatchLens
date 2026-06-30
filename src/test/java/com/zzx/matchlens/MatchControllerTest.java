@@ -1,6 +1,6 @@
 package com.zzx.matchlens;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.zzx.matchlens.common.SportType;
 import com.zzx.matchlens.dto.AddPlayerRequest;
 import com.zzx.matchlens.dto.CreateMatchRequest;
@@ -93,13 +93,13 @@ class MatchControllerTest {
     // ==================== 4. 设置队伍 ====================
     @Test
     @Order(4)
-    @DisplayName("POST /api/matches/{id}/teams — 设置主队和客队")
+    @DisplayName("POST /api/matches/{id}/teams — 设置甲方和乙方")
     void testSetTeams() throws Exception {
         String id = createTestMatch();
 
         SetTeamsRequest request = new SetTeamsRequest();
-        request.setHomeName("测试主队");
-        request.setAwayName("测试客队");
+        request.setTeamAName("测试甲方");
+        request.setTeamBName("测试乙方");
 
         mockMvc.perform(post("/api/matches/" + id + "/teams")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -111,8 +111,8 @@ class MatchControllerTest {
         // 验证队伍已设置
         mockMvc.perform(get("/api/matches/" + id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.homeTeam.teamName").value("测试主队"))
-                .andExpect(jsonPath("$.awayTeam.teamName").value("测试客队"));
+                .andExpect(jsonPath("$.teamA.teamName").value("测试甲方"))
+                .andExpect(jsonPath("$.teamB.teamName").value("测试乙方"));
     }
 
     // ==================== 5. 添加球员 ====================
@@ -123,7 +123,7 @@ class MatchControllerTest {
         String id = createMatchWithTeams();
 
         AddPlayerRequest request = new AddPlayerRequest();
-        request.setHome(true);
+        request.setTeamA(true);
         request.setPlayerName("测试球员");
         request.setNumber(23);
 
@@ -232,8 +232,8 @@ class MatchControllerTest {
         String id = createTestMatch();
 
         SetTeamsRequest teamsReq = new SetTeamsRequest();
-        teamsReq.setHomeName("主队A");
-        teamsReq.setAwayName("客队B");
+        teamsReq.setTeamAName("甲方A");
+        teamsReq.setTeamBName("乙方B");
 
         mockMvc.perform(post("/api/matches/" + id + "/teams")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -247,7 +247,7 @@ class MatchControllerTest {
         String id = createMatchWithTeams();
 
         AddPlayerRequest playerReq = new AddPlayerRequest();
-        playerReq.setHome(true);
+        playerReq.setTeamA(true);
         playerReq.setPlayerName("球员1");
         playerReq.setNumber(1);
 

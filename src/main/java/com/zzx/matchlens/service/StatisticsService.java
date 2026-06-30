@@ -23,11 +23,12 @@ public class StatisticsService {
     public MatchStatistics getStatistics(String matchId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new RuntimeException("比赛不存在: " + matchId));
+        MatchStatistics stats = match.getStatistics();
         if (match.getHomeTeam() == null || match.getAwayTeam() == null) {
-            throw new RuntimeException("比赛尚未设置队伍");
+            return stats;
         }
-        match.getStatistics().updateFromMatch(match);
-        return match.getStatistics();
+        stats.updateFromMatch(match);
+        return stats;
     }
 
     public String getAnalysis(String matchId) {

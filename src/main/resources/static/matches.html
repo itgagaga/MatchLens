@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatchLens - 比赛管理</title>
+  <link rel="stylesheet" href="./css/theme.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/pages.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html">🏆 MatchLens</a>
+    <nav class="nav">
+      <a class="nav-link" href="./index.html">首页</a>
+      <a class="nav-link" href="./matches.html">比赛管理</a>
+      <a class="nav-link" href="./teams.html">球队管理</a>
+      <a class="nav-link" href="./players.html">球员管理</a>
+      <a class="nav-link" href="./rankings.html">排行榜</a>
+      <a class="nav-link" href="./ai-logs.html">AI 日志</a>
+      <a class="nav-link" href="./reports.html">报告中心</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="page-hero">
+      <h1>比赛管理</h1>
+      <p>创建比赛、筛选比赛，进入详情查看统计与分析，或进入设置管理队伍与状态</p>
+    </section>
+
+    <section class="card">
+      <h2>创建比赛</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>比赛名称</label>
+          <input type="text" id="matchName" placeholder="请输入比赛名称" />
+        </div>
+        <div class="form-group">
+          <label>赛事类型</label>
+          <select id="sportType">
+            <option value="BASKETBALL">🏀 篮球</option>
+            <option value="FOOTBALL">⚽ 足球</option>
+            <option value="VOLLEYBALL">🏐 排球</option>
+            <option value="GENERAL">🏅 通用</option>
+          </select>
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <button class="btn" onclick="MatchesPage.createMatch()">创建比赛</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>筛选比赛</h2>
+      <div class="filter-bar">
+        <select id="filterSportType">
+          <option value="">全部赛事类型</option>
+          <option value="BASKETBALL">🏀 篮球</option>
+          <option value="FOOTBALL">⚽ 足球</option>
+          <option value="VOLLEYBALL">🏐 排球</option>
+          <option value="GENERAL">🏅 通用</option>
+        </select>
+        <select id="filterStatus">
+          <option value="">全部状态</option>
+          <option value="NOT_STARTED">未开始</option>
+          <option value="RUNNING">进行中</option>
+          <option value="PAUSED">已暂停</option>
+          <option value="FINISHED">已结束</option>
+        </select>
+        <button class="btn btn-sm" onclick="MatchesPage.loadMatches()">筛选</button>
+      </div>
+    </section>
+
+    <section>
+      <div class="grid grid-3" id="matchList"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="./js/constants.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/common.js"></script>
+  <script src="./js/pages/matches.js"></script>
+</body>
+</html>

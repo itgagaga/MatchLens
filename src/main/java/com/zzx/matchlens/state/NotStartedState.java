@@ -9,7 +9,7 @@ public class NotStartedState implements MatchState {
     @Override
     public Result<String> start(Match match) {
         if (match.getHomeTeam() == null || match.getAwayTeam() == null) {
-            return Result.fail("比赛必须有主队和客队才能开始");
+            return Result.fail("比赛必须设置甲方和乙方才能开始");
         }
         match.setStatus(MatchStatus.RUNNING);
         return Result.ok("比赛已开始");

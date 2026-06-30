@@ -274,9 +274,9 @@ public class RemoteModelAgent implements AiAgent {
         sb.append("【赛事类型】").append(match.getSportType()).append("\n");
         sb.append("【比赛状态】").append(match.getStatus()).append("\n");
         if (match.getHomeTeam() != null && match.getAwayTeam() != null) {
-            sb.append("【主队】").append(match.getHomeTeam().getTeamName())
+            sb.append("【甲方】").append(match.getHomeTeam().getTeamName())
               .append(" （").append(match.getHomeTeam().getScore()).append("分）\n");
-            sb.append("【客队】").append(match.getAwayTeam().getTeamName())
+            sb.append("【乙方】").append(match.getAwayTeam().getTeamName())
               .append(" （").append(match.getAwayTeam().getScore()).append("分）\n");
         }
         sb.append("【当前时间】").append(java.time.LocalDateTime.now()).append("\n\n");

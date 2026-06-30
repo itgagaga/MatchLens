@@ -26,7 +26,7 @@ public class StatisticsRebuildService {
     /**
      * 重算某场比赛的全部统计：
      * 1. 清空球员统计
-     * 2. 重置主客队 score 为 0
+     * 2. 重置双方 score 为 0
      * 3. 按 event_time 升序重放所有事件
      * 4. 更新 t_team.score 和 t_player_statistics
      */
@@ -37,7 +37,7 @@ public class StatisticsRebuildService {
         // 1. 清空球员统计
         match.clearPlayerStatistics();
 
-        // 2. 重置主客队分数
+        // 2. 重置双方分数
         match.getHomeTeam().setScore(0);
         match.getAwayTeam().setScore(0);
 

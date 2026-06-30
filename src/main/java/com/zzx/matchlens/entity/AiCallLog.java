@@ -2,6 +2,7 @@ package com.zzx.matchlens.entity;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 
 @TableName("t_ai_call_log")
@@ -38,4 +39,10 @@ public class AiCallLog {
     public void setResponseTimeMs(Long responseTimeMs) { this.responseTimeMs = responseTimeMs; }
     public LocalDateTime getCallTime() { return callTime; }
     public void setCallTime(LocalDateTime callTime) { this.callTime = callTime; }
+
+    @JsonProperty("createTime")
+    public LocalDateTime getCreateTime() { return callTime; }
+
+    @JsonProperty("duration")
+    public Long getDuration() { return responseTimeMs; }
 }

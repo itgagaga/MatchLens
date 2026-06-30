@@ -50,8 +50,8 @@ public class ReviewReportAgent implements AiAgent {
                 + "【赛事信息】\n"
                 + "赛事类型：" + match.getSportType() + "\n"
                 + "比赛状态：" + match.getStatus() + "\n"
-                + "主队：" + (match.getHomeTeam() != null ? match.getHomeTeam().getTeamName() : "未知") + "\n"
-                + "客队：" + (match.getAwayTeam() != null ? match.getAwayTeam().getTeamName() : "未知") + "\n\n"
+                + "甲方：" + (match.getHomeTeam() != null ? match.getHomeTeam().getTeamName() : "未知") + "\n"
+                + "乙方：" + (match.getAwayTeam() != null ? match.getAwayTeam().getTeamName() : "未知") + "\n\n"
                 + "请使用专业但易懂的中文分析。";
     }
 }
