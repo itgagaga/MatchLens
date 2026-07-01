@@ -8,7 +8,7 @@ const AiLogsPage = {
     } catch (e) { this.matches = []; }
     const sel = document.getElementById('filterMatchId');
     sel.innerHTML = '<option value="">全部比赛</option>' +
-      this.matches.map(m => `<option value="${m.matchId}">${m.matchName || m.matchId}</option>`).join('');
+      this.matches.map(m => `<option value="${m.matchId}">${m.matchName || '未命名比赛'}</option>`).join('');
 
     // URL 参数 matchId
     const matchId = Common.getParam('matchId');
@@ -62,7 +62,7 @@ const AiLogsPage = {
             </div>
           </div>
           <div style="font-size:14px;color:var(--text-muted);margin-top:4px">
-            比赛: ${log.matchId || '-'} · 耗时: ${log.duration ? log.duration + 'ms' : '-'}
+            比赛: ${(this.matches.find(m => String(m.matchId) === String(log.matchId)) || {}).matchName || '未命名比赛'} · 耗时: ${log.duration ? log.duration + 'ms' : '-'}
           </div>
           ${log.errorMessage ? `<div style="color:var(--danger);margin-top:6px;font-size:13px">错误: ${log.errorMessage}</div>` : ''}
         </div>

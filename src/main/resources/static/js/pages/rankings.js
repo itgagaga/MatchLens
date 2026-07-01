@@ -7,7 +7,7 @@ const RankingsPage = {
       this.matches = await API.getMatches() || [];
       const sel = document.getElementById('rankMatchId');
       sel.innerHTML = '<option value="">请选择比赛</option>' +
-        this.matches.map(m => `<option value="${m.matchId}">${m.matchName || m.matchId}</option>`).join('');
+        this.matches.map(m => `<option value="${m.matchId}">${m.matchName || '未命名比赛'}</option>`).join('');
     } catch (e) { this.matches = []; }
 
     document.getElementById('rankMode').addEventListener('change', function () {
@@ -53,7 +53,7 @@ const RankingsPage = {
       return `
         <div class="rank-row ${rankClass}">
           <div class="rank-num">${medal}</div>
-          <div class="rank-name">${item.playerName || item.playerId || '-'}</div>
+          <div class="rank-name">${item.playerName || '-'}</div>
           <div class="rank-value">${item.statValue ?? item[statKey.toLowerCase()] ?? 0}</div>
         </div>
       `;

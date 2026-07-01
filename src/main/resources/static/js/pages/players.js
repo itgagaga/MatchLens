@@ -51,7 +51,7 @@ const PlayersPage = {
       const team = this.teams.find(t => t.teamId === p.teamId);
       return `<tr>
         <td style="font-weight:600">${p.playerName}</td>
-        <td>${team ? team.teamName : p.teamId || '-'}</td>
+        <td>${team ? team.teamName : '-'}</td>
         <td>${p.number}</td>
         <td>${p.position || '-'}</td>
         <td>${p.age || '-'}</td>
@@ -139,7 +139,7 @@ const PlayersPage = {
       const team = this.teams.find(t => t.teamId === p.teamId);
       html += `<div style="margin-bottom:14px">
         <strong>姓名:</strong> ${p.playerName} &nbsp;
-        <strong>球队:</strong> ${team ? team.teamName : p.teamId || '-'} &nbsp;
+        <strong>球队:</strong> ${team ? team.teamName : '-'} &nbsp;
         <strong>号码:</strong> ${p.number} &nbsp;
         <strong>位置:</strong> ${p.position || '-'}
       </div>`;

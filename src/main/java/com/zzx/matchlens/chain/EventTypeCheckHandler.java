@@ -12,17 +12,19 @@ public class EventTypeCheckHandler extends EventCheckHandler {
 
     private static final Set<EventType> BASKETBALL_EVENTS = Set.of(
             EventType.SCORE, EventType.FOUL, EventType.ASSIST,
-            EventType.REBOUND, EventType.STEAL, EventType.TURNOVER, EventType.TIMEOUT
+            EventType.REBOUND, EventType.STEAL, EventType.TURNOVER,
+            EventType.TIMEOUT, EventType.SUBSTITUTION
     );
 
     private static final Set<EventType> FOOTBALL_EVENTS = Set.of(
             EventType.SCORE, EventType.FOUL, EventType.YELLOW_CARD,
-            EventType.RED_CARD, EventType.SUBSTITUTION
+            EventType.RED_CARD, EventType.SUBSTITUTION, EventType.TIMEOUT
     );
 
     private static final Set<EventType> VOLLEYBALL_EVENTS = Set.of(
             EventType.SCORE, EventType.BLOCK, EventType.SERVE_ACE,
-            EventType.ERROR, EventType.TIMEOUT
+            EventType.ERROR, EventType.TIMEOUT, EventType.SUBSTITUTION,
+            EventType.FOUL
     );
 
     @Override
@@ -34,7 +36,7 @@ public class EventTypeCheckHandler extends EventCheckHandler {
             case BASKETBALL -> BASKETBALL_EVENTS;
             case FOOTBALL -> FOOTBALL_EVENTS;
             case VOLLEYBALL -> VOLLEYBALL_EVENTS;
-            case GENERAL -> Set.of(EventType.SCORE, EventType.FOUL, EventType.TIMEOUT);
+            case GENERAL -> Set.of(EventType.values());
         };
 
         if (!allowed.contains(eventType)) {

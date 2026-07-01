@@ -19,7 +19,7 @@ const TeamsPage = {
       <div class="team-card" style="margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div class="team-title">${t.teamName || '-'}</div>
-          <span class="badge badge-blue">ID: ${t.teamId}</span>
+          <span class="badge badge-blue">球队</span>
         </div>
         <div class="team-meta">城市: ${t.city || '-'} · 教练: ${t.coachName || '-'}</div>
         <div class="action-group" style="margin-top:10px">

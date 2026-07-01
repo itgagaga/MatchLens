@@ -7,7 +7,7 @@ const ReportsPage = {
     } catch (e) { this.matches = []; }
     const sel = document.getElementById('reportMatchId');
     sel.innerHTML = '<option value="">请选择比赛</option>' +
-      this.matches.map(m => `<option value="${m.matchId}">${m.matchName || m.matchId}</option>`).join('');
+      this.matches.map(m => `<option value="${m.matchId}">${m.matchName || '未命名比赛'}</option>`).join('');
 
     // URL 参数 matchId
     const matchId = Common.getParam('matchId');

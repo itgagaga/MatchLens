@@ -80,6 +80,31 @@
 .timeline-item .event-actions { margin-top: 6px; }
 
 /* Statistics Panel */
+
+/* Scroll Panel — fixed height with scrollbar */
+.scroll-panel {
+  max-height: 480px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(79,70,229,0.35) transparent;
+}
+.scroll-panel::-webkit-scrollbar {
+  width: 6px;
+}
+.scroll-panel::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 99px;
+}
+.scroll-panel::-webkit-scrollbar-thumb {
+  background: rgba(79,70,229,0.3);
+  border-radius: 99px;
+}
+.scroll-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(79,70,229,0.55);
+}
+
 .stat-score-card {
   background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(6,182,212,0.08));
   border: 1px solid var(--border);
