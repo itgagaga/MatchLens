@@ -1,5 +1,6 @@
 package com.zzx.matchlens.agent;
 
+import com.zzx.matchlens.common.EventType;
 import com.zzx.matchlens.entity.*;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,13 @@ public class DataCollectAgent implements AiAgent {
     }
 
     public String collect(Match match) {
+        // 先重算统计，确保比分和球员数据均来自事件而非持久化旧值
+        if (match.getStatistics() != null && match.getHomeTeam() != null && match.getAwayTeam() != null) {
+            // 从事件重算球员统计，避免 DB 中的旧统计与事件不一致
+            rebuildPlayerStatsFromEvents(match);
+            match.getStatistics().updateFromMatch(match);
+        }
+
         StringJoiner sj = new StringJoiner("\n");
 
         sj.add("=== 比赛数据摘要 ===");
@@ -24,9 +32,12 @@ public class DataCollectAgent implements AiAgent {
         Team home = match.getHomeTeam();
         Team away = match.getAwayTeam();
         if (home != null && away != null) {
+            // 使用统计计算的真实比分，而非 team.score 种子值
+            int homeScore = match.getStatistics() != null ? match.getStatistics().getHomeScore() : home.getScore();
+            int awayScore = match.getStatistics() != null ? match.getStatistics().getAwayScore() : away.getScore();
             sj.add(String.format("比分: %s %d : %d %s",
-                    home.getTeamName(), home.getScore(),
-                    away.getScore(), away.getTeamName()));
+                    home.getTeamName(), homeScore,
+                    awayScore, away.getTeamName()));
 
             sj.add("\n--- 甲方球员数据 (" + home.getTeamName() + ") ---");
             appendTeamPlayers(sj, home);
@@ -55,6 +66,34 @@ public class DataCollectAgent implements AiAgent {
         }
 
         return sj.toString();
+    }
+
+    /**
+     * 从事件列表重算所有球员统计（不持久化），
+     * 确保喂给 AI 的球员数据与事件时间线严格一致。
+     */
+    private void rebuildPlayerStatsFromEvents(Match match) {
+        match.clearPlayerStatistics();
+        for (MatchEvent event : match.getEvents()) {
+            Player player = findPlayer(match, event.getPlayerId());
+            if (player != null) {
+                String statKey = event.getEventType().name();
+                int statValue = (event.getEventType() == EventType.SCORE && event.getScoreValue() > 0)
+                        ? event.getScoreValue() : 1;
+                player.addStat(statKey, statValue);
+            }
+        }
+    }
+
+    private Player findPlayer(Match match, String playerId) {
+        if (match.getHomeTeam() != null) {
+            Player p = match.getHomeTeam().findPlayer(playerId);
+            if (p != null) return p;
+        }
+        if (match.getAwayTeam() != null) {
+            return match.getAwayTeam().findPlayer(playerId);
+        }
+        return null;
     }
 
     private void appendTeamPlayers(StringJoiner sj, Team team) {
