@@ -138,12 +138,15 @@ input:focus, select:focus, textarea:focus {
   max-width: 600px;
   width: 90%;
   max-height: 80vh;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 24px 60px rgba(0,0,0,0.3);
 }
 
-.modal h2 { margin: 0 0 16px; font-size: 20px; }
-.modal .btn-group { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+.modal h2 { margin: 0 0 16px; font-size: 20px; flex-shrink: 0; }
+.modal-body { flex: 1; overflow-y: auto; min-height: 0; padding-right: 4px; }
+.modal .btn-group { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; flex-shrink: 0; }
 
 /* Feature Card */
 .feature-card {

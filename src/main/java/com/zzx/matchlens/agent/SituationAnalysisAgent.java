@@ -27,7 +27,7 @@ public class SituationAnalysisAgent implements AiAgent {
         String userPrompt = dataCollectAgent.collect(match);
 
         AiAgentResponse remoteResponse = remoteModelAgent.callWithPrompt(
-                match, AiAgentType.SITUATION_ANALYSIS, systemPrompt + "\n\n" + userPrompt);
+                match, AiAgentType.SITUATION_ANALYSIS, systemPrompt, userPrompt);
 
         if (remoteResponse.isSuccess()) {
             return remoteResponse.getContent();

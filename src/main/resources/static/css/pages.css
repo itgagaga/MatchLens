@@ -384,6 +384,58 @@
 .md-preview strong { color: var(--secondary); }
 .md-preview code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
 
+/* Streaming Preview */
+.stream-preview {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  max-height: 520px;
+  overflow-y: auto;
+  line-height: 1.8;
+  font-size: 15px;
+}
+.stream-preview h1 { font-size: 24px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+.stream-preview h2 { font-size: 20px; color: var(--primary); margin-top: 20px; }
+.stream-preview h3 { font-size: 17px; }
+.stream-preview ul, .stream-preview ol { padding-left: 24px; }
+.stream-preview strong { color: var(--secondary); }
+.stream-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 18px;
+  background: var(--primary);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink-cursor 0.7s steps(1) infinite;
+}
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.streaming-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  animation: pulse-badge 1.5s ease-in-out infinite;
+}
+.streaming-badge.done {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  animation: none;
+}
+.streaming-badge.error {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  animation: none;
+}
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 /* Tabs */
 .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
 .tab-btn {

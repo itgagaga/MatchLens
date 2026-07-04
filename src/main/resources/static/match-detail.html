@@ -17,7 +17,6 @@
       <a class="nav-link" href="./teams.html">球队管理</a>
       <a class="nav-link" href="./players.html">球员管理</a>
       <a class="nav-link" href="./rankings.html">排行榜</a>
-      <a class="nav-link" href="./ai-logs.html">AI 日志</a>
       <a class="nav-link" href="./reports.html">报告中心</a>
     </nav>
   </header>
@@ -30,7 +29,6 @@
         <h2 style="margin:0">比赛信息</h2>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <a class="btn btn-sm" id="linkAdmin" href="#">比赛设置</a>
-          <a class="btn btn-sm" id="linkAiLogs" href="#">AI 日志</a>
           <a class="btn btn-sm btn-orange" id="linkReports" href="#">历史报告</a>
         </div>
       </div>
@@ -95,14 +93,12 @@
     <section class="grid grid-2">
       <section class="card">
         <h2>AI 实时态势分析</h2>
-        <button class="btn btn-orange" onclick="MatchDetailPage.getAnalysis()" style="margin-bottom:12px">生成态势分析</button>
-        <button class="btn btn-sm" onclick="MatchDetailPage.streamAnalysis()" style="margin-bottom:12px">流式生成</button>
+        <button id="btnAnalysis" class="btn btn-orange" onclick="MatchDetailPage.getAnalysis()" style="margin-bottom:12px">生成态势分析</button>
         <div id="analysisResult" class="ai-result" style="display:none"></div>
       </section>
       <section class="card">
         <h2>赛后复盘报告</h2>
-        <button class="btn btn-red" onclick="MatchDetailPage.getReviewReport()" style="margin-bottom:12px">生成赛后复盘</button>
-        <button class="btn btn-sm" onclick="MatchDetailPage.streamReport()" style="margin-bottom:12px">流式生成</button>
+        <button id="btnReport" class="btn btn-red" onclick="MatchDetailPage.getReviewReport()" style="margin-bottom:12px">生成赛后复盘</button>
         <div id="reportResult" class="ai-result" style="display:none"></div>
       </section>
     </section>

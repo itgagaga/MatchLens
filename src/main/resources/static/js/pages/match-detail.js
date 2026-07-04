@@ -9,7 +9,6 @@ const MatchDetailPage = {
       return;
     }
     document.getElementById('linkAdmin').href = `./match-admin.html?matchId=${this.matchId}`;
-    document.getElementById('linkAiLogs').href = `./ai-logs.html?matchId=${this.matchId}`;
     document.getElementById('linkReports').href = `./reports.html?matchId=${this.matchId}`;
     await this.loadMatch();
     await this.loadEvents();
@@ -241,46 +240,54 @@ const MatchDetailPage = {
     } catch (e) { Common.showEmpty(el, '加载统计失败: ' + e.message); }
   },
 
-  async getAnalysis() {
+  getAnalysis() {
     const el = document.getElementById('analysisResult');
-    el.style.display = 'block';
-    el.textContent = '正在生成态势分析...';
-    try {
-      const text = await API.getAnalysis(this.matchId);
-      el.innerHTML = Common.markdownToHtml(text);
-    } catch (e) { el.textContent = '生成失败: ' + e.message; }
-  },
-
-  async getReviewReport() {
-    const el = document.getElementById('reportResult');
-    el.style.display = 'block';
-    el.textContent = '正在生成赛后复盘...';
-    try {
-      const text = await API.getReviewReport(this.matchId);
-      el.innerHTML = Common.markdownToHtml(text);
-    } catch (e) { el.textContent = '生成失败: ' + e.message; }
-  },
-
-  streamAnalysis() {
-    const el = document.getElementById('analysisResult');
+    const btn = document.getElementById('btnAnalysis');
     el.style.display = 'block';
     el.textContent = '';
+    btn.disabled = true;
+    btn.textContent = '正在生成...';
     const url = API.streamAnalysis(this.matchId);
     const evtSource = new EventSource(url);
     evtSource.addEventListener('chunk', e => { el.textContent += e.data; });
-    evtSource.addEventListener('done', () => { evtSource.close(); el.innerHTML = Common.markdownToHtml(el.textContent); });
-    evtSource.addEventListener('error', e => { evtSource.close(); if (el.textContent) el.innerHTML = Common.markdownToHtml(el.textContent); else el.textContent = '生成失败'; });
+    evtSource.addEventListener('done', () => {
+      evtSource.close();
+      el.innerHTML = Common.markdownToHtml(el.textContent);
+      btn.disabled = false;
+      btn.textContent = '生成态势分析';
+    });
+    evtSource.addEventListener('error', e => {
+      evtSource.close();
+      if (el.textContent) el.innerHTML = Common.markdownToHtml(el.textContent);
+      else el.textContent = '生成失败';
+      btn.disabled = false;
+      btn.textContent = '生成态势分析';
+    });
   },
 
-  streamReport() {
+  getReviewReport() {
     const el = document.getElementById('reportResult');
+    const btn = document.getElementById('btnReport');
     el.style.display = 'block';
     el.textContent = '';
+    btn.disabled = true;
+    btn.textContent = '正在生成...';
     const url = API.streamReport(this.matchId);
     const evtSource = new EventSource(url);
     evtSource.addEventListener('chunk', e => { el.textContent += e.data; });
-    evtSource.addEventListener('done', () => { evtSource.close(); el.innerHTML = Common.markdownToHtml(el.textContent); });
-    evtSource.addEventListener('error', e => { evtSource.close(); if (el.textContent) el.innerHTML = Common.markdownToHtml(el.textContent); else el.textContent = '生成失败'; });
+    evtSource.addEventListener('done', () => {
+      evtSource.close();
+      el.innerHTML = Common.markdownToHtml(el.textContent);
+      btn.disabled = false;
+      btn.textContent = '生成赛后复盘';
+    });
+    evtSource.addEventListener('error', e => {
+      evtSource.close();
+      if (el.textContent) el.innerHTML = Common.markdownToHtml(el.textContent);
+      else el.textContent = '生成失败';
+      btn.disabled = false;
+      btn.textContent = '生成赛后复盘';
+    });
   }
 };
 

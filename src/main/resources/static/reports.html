@@ -17,7 +17,6 @@
       <a class="nav-link" href="./teams.html">球队管理</a>
       <a class="nav-link" href="./players.html">球员管理</a>
       <a class="nav-link" href="./rankings.html">排行榜</a>
-      <a class="nav-link" href="./ai-logs.html">AI 日志</a>
       <a class="nav-link" href="./reports.html">报告中心</a>
     </nav>
   </header>
@@ -34,10 +33,19 @@
         <select id="reportMatchId">
           <option value="">请选择比赛</option>
         </select>
-        <button class="btn btn-orange btn-sm" onclick="ReportsPage.generateReport('ANALYSIS')">生成态势报告</button>
+        <button class="btn btn-orange btn-sm" onclick="ReportsPage.generateReport('SITUATION')">生成态势报告</button>
         <button class="btn btn-red btn-sm" onclick="ReportsPage.generateReport('REVIEW')">生成复盘报告</button>
         <button class="btn btn-sm" onclick="ReportsPage.loadReports()">查询报告</button>
       </div>
+    </section>
+
+    <!-- 流式生成预览区域 -->
+    <section class="card" id="streamSection" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h2 id="streamTitle">正在生成报告...</h2>
+        <span class="streaming-badge" id="streamBadge">● 生成中</span>
+      </div>
+      <div class="stream-preview" id="streamPreview"></div>
     </section>
 
     <section>
@@ -49,7 +57,7 @@
   <div class="modal-overlay" id="reportDetailModal">
     <div class="modal" style="max-width:800px">
       <h2 id="reportDetailTitle">报告详情</h2>
-      <div id="reportDetailContent"></div>
+      <div class="modal-body" id="reportDetailContent"></div>
       <div class="btn-group">
         <button class="btn btn-sm" onclick="Common.closeModal('reportDetailModal')">关闭</button>
       </div>

@@ -91,11 +91,6 @@ const API = (() => {
     getPlayerRankings(params = {}) { return request(`/api/rankings/players${toQuery(params)}`); },
     getOverallPlayerRankings(params = {}) { return request(`/api/rankings/players/overall${toQuery(params)}`); },
 
-    // AI Logs
-    getAiLogs(params = {}) { return request(`/api/ai-logs${toQuery(params)}`); },
-    getAiLog(id) { return request(`/api/ai-logs/${id}`); },
-    deleteAiLog(id) { return request(`/api/ai-logs/${id}`, { method: 'DELETE' }); },
-    getMatchAiLogs(matchId) { return request(`/api/matches/${matchId}/ai-logs`); },
 
     // Reports
     getMatchReports(matchId) { return request(`/api/matches/${matchId}/reports`); },

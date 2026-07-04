@@ -28,7 +28,7 @@ public class ReviewReportAgent implements AiAgent {
         String userPrompt = dataCollectAgent.collect(match);
 
         AiAgentResponse remoteResponse = remoteModelAgent.callWithPrompt(
-                match, AiAgentType.REVIEW_REPORT, systemPrompt + "\n\n" + userPrompt);
+                match, AiAgentType.REVIEW_REPORT, systemPrompt, userPrompt);
 
         if (remoteResponse.isSuccess()) {
             return remoteResponse.getContent();

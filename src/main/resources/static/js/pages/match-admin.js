@@ -9,7 +9,6 @@ const MatchAdminPage = {
       return;
     }
     document.getElementById('linkDetail').href = `./match-detail.html?matchId=${this.matchId}`;
-    document.getElementById('linkAiLogs').href = `./ai-logs.html?matchId=${this.matchId}`;
     document.getElementById('linkReports').href = `./reports.html?matchId=${this.matchId}`;
     await this.loadMatch();
   },

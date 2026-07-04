@@ -1,10 +1,14 @@
 package com.zzx.matchlens.controller;
 
+import com.zzx.matchlens.agent.AiAgentResponse;
+import com.zzx.matchlens.agent.AiAgentType;
 import com.zzx.matchlens.agent.DataCollectAgent;
 import com.zzx.matchlens.agent.RemoteModelAgent;
+import com.zzx.matchlens.dto.SaveReportRequest;
 import com.zzx.matchlens.entity.Match;
 import com.zzx.matchlens.entity.MatchStatistics;
 import com.zzx.matchlens.repository.MatchRepository;
+import com.zzx.matchlens.service.MatchReportService;
 import com.zzx.matchlens.service.ReportService;
 import com.zzx.matchlens.service.StatisticsService;
 import org.springframework.http.MediaType;
@@ -23,18 +27,21 @@ public class ReportController {
     private final MatchRepository matchRepository;
     private final RemoteModelAgent remoteModelAgent;
     private final DataCollectAgent dataCollectAgent;
+    private final MatchReportService matchReportService;
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
     public ReportController(StatisticsService statisticsService,
                             ReportService reportService,
                             MatchRepository matchRepository,
                             RemoteModelAgent remoteModelAgent,
-                            DataCollectAgent dataCollectAgent) {
+                            DataCollectAgent dataCollectAgent,
+                            MatchReportService matchReportService) {
         this.statisticsService = statisticsService;
         this.reportService = reportService;
         this.matchRepository = matchRepository;
         this.remoteModelAgent = remoteModelAgent;
         this.dataCollectAgent = dataCollectAgent;
+        this.matchReportService = matchReportService;
     }
 
     @GetMapping("/statistics")
@@ -66,17 +73,32 @@ public class ReportController {
 
                 String systemPrompt = buildAnalysisPrompt(match);
                 String userPrompt = dataCollectAgent.collect(match);
-                String fullPrompt = systemPrompt + "\n\n" + userPrompt;
 
                 emitter.send(SseEmitter.event().name("start").data(""));
 
-                remoteModelAgent.streamChat(match, fullPrompt, chunk -> {
+                AiAgentResponse resp = remoteModelAgent.streamChat(match, systemPrompt, userPrompt,
+                        AiAgentType.SITUATION_ANALYSIS, chunk -> {
                     try {
                         emitter.send(SseEmitter.event().name("chunk").data(chunk));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
+
+                // 流式完成后保存报告到数据库
+                if (resp.isSuccess() && resp.getContent() != null) {
+                    try {
+                        SaveReportRequest req = new SaveReportRequest();
+                        req.setReportType("SITUATION");
+                        req.setTitle("实时态势分析 - " + java.time.LocalDateTime.now().format(
+                                java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+                        req.setContent(resp.getContent());
+                        req.setGeneratedBy(resp.isSuccess() ? "REMOTE_AI" : "LOCAL_RULE");
+                        matchReportService.saveReport(matchId, req);
+                    } catch (Exception e) {
+                        System.err.println("[ReportController] 保存态势分析报告失败: " + e.getMessage());
+                    }
+                }
 
                 emitter.send(SseEmitter.event().name("done").data(""));
                 emitter.complete();
@@ -104,17 +126,32 @@ public class ReportController {
 
                 String systemPrompt = buildReportPrompt(match);
                 String userPrompt = dataCollectAgent.collect(match);
-                String fullPrompt = systemPrompt + "\n\n" + userPrompt;
 
                 emitter.send(SseEmitter.event().name("start").data(""));
 
-                remoteModelAgent.streamChat(match, fullPrompt, chunk -> {
+                AiAgentResponse resp = remoteModelAgent.streamChat(match, systemPrompt, userPrompt,
+                        AiAgentType.REVIEW_REPORT, chunk -> {
                     try {
                         emitter.send(SseEmitter.event().name("chunk").data(chunk));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
+
+                // 流式完成后保存报告到数据库
+                if (resp.isSuccess() && resp.getContent() != null) {
+                    try {
+                        SaveReportRequest req = new SaveReportRequest();
+                        req.setReportType("REVIEW");
+                        req.setTitle("赛后复盘报告 - " + java.time.LocalDateTime.now().format(
+                                java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+                        req.setContent(resp.getContent());
+                        req.setGeneratedBy(resp.isSuccess() ? "REMOTE_AI" : "LOCAL_RULE");
+                        matchReportService.saveReport(matchId, req);
+                    } catch (Exception e) {
+                        System.err.println("[ReportController] 保存复盘报告失败: " + e.getMessage());
+                    }
+                }
 
                 emitter.send(SseEmitter.event().name("done").data(""));
                 emitter.complete();

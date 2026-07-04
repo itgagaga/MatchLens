@@ -35,7 +35,7 @@ const ReportsPage = {
   renderReports(reports) {
     const listEl = document.getElementById('reportList');
     listEl.innerHTML = reports.map(r => {
-      const typeBadge = r.reportType === 'ANALYSIS'
+      const typeBadge = r.reportType === 'SITUATION'
         ? '<span class="badge badge-orange">态势分析</span>'
         : r.reportType === 'REVIEW'
           ? '<span class="badge badge-red">赛后复盘</span>'
@@ -60,14 +60,83 @@ const ReportsPage = {
     }).join('');
   },
 
-  async generateReport(type) {
+  generateReport(type) {
     const matchId = document.getElementById('reportMatchId').value;
     if (!matchId) { Common.toast('请选择比赛'); return; }
-    try {
-      await API.generateAndSaveReport(matchId, type);
+
+    // 禁用生成按钮，防止重复点击
+    const btns = document.querySelectorAll('.btn-orange, .btn-red');
+    btns.forEach(b => b.disabled = true);
+
+    // 显示流式预览区域
+    const streamSection = document.getElementById('streamSection');
+    const streamPreview = document.getElementById('streamPreview');
+    const streamTitle = document.getElementById('streamTitle');
+    const streamBadge = document.getElementById('streamBadge');
+    streamSection.style.display = '';
+    streamPreview.innerHTML = '';
+    streamTitle.textContent = type === 'SITUATION' ? '正在生成态势报告...' : '正在生成复盘报告...';
+    streamBadge.textContent = '● 生成中';
+    streamBadge.className = 'streaming-badge';
+
+    // 选择对应的 SSE 端点
+    const sseUrl = type === 'SITUATION'
+      ? API.streamAnalysis(matchId)
+      : API.streamReport(matchId);
+
+    let fullContent = '';
+    let completed = false;
+    const es = new EventSource(sseUrl);
+
+    es.addEventListener('start', () => {
+      streamPreview.innerHTML = '<div class="stream-cursor"></div>';
+    });
+
+    es.addEventListener('chunk', (e) => {
+      fullContent += e.data;
+      streamPreview.innerHTML = Common.markdownToHtml(fullContent) + '<div class="stream-cursor"></div>';
+      // 自动滚动到底部
+      streamPreview.scrollTop = streamPreview.scrollHeight;
+    });
+
+    es.addEventListener('done', () => {
+      completed = true;
+      es.close();
+      streamTitle.textContent = '报告生成完成';
+      streamBadge.textContent = '✓ 已完成';
+      streamBadge.className = 'streaming-badge done';
+      // 移除光标
+      const cursor = streamPreview.querySelector('.stream-cursor');
+      if (cursor) cursor.remove();
+      // 恢复按钮
+      btns.forEach(b => b.disabled = false);
       Common.toast('报告生成成功');
-      await this.loadReports();
-    } catch (e) { Common.toast('生成失败: ' + e.message); }
+      // 刷新报告列表
+      this.loadReports();
+    });
+
+    es.addEventListener('error', (e) => {
+      completed = true;
+      es.close();
+      streamTitle.textContent = '生成失败';
+      streamBadge.textContent = '✗ 失败';
+      streamBadge.className = 'streaming-badge error';
+      btns.forEach(b => b.disabled = false);
+      if (e.data) {
+        streamPreview.innerHTML += `<div style="color:var(--danger);margin-top:8px">${e.data}</div>`;
+      }
+      Common.toast('生成失败');
+    });
+
+    es.onerror = () => {
+      // 正常完成后服务端关闭连接也会触发 onerror，忽略即可
+      if (completed) { es.close(); return; }
+      es.close();
+      streamTitle.textContent = '连接中断';
+      streamBadge.textContent = '✗ 中断';
+      streamBadge.className = 'streaming-badge error';
+      btns.forEach(b => b.disabled = false);
+    };
   },
 
   async viewDetail(reportId) {
