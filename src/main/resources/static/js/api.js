@@ -23,12 +23,30 @@ const API = (() => {
 
   async function request(url, options = {}, responseType = 'json') {
     const headers = { 'Content-Type': 'application/json' };
-    const config = { headers, ...options };
+    // 自动携带 token
+    const token = localStorage.getItem('token');
+    if (token) {
+      headers['Authorization'] = 'Bearer ' + token;
+    }
+    const config = { headers, ...options }
     if (config.body && typeof config.body === 'string') {
       config.headers['Content-Type'] = 'application/json';
     }
     try {
       const resp = await fetch(BASE + url, config);
+      // 401 未登录，跳转登录页
+      if (resp.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('username');
+        localStorage.removeItem('nickname');
+        localStorage.removeItem('role');
+        window.location.href = './login.html';
+        throw new Error('登录已过期，请重新登录');
+      }
+      if (resp.status === 403) {
+        throw new Error('权限不足');
+      }
       if (!resp.ok) {
         const text = await resp.text();
         throw new Error(text || `请求失败: ${resp.status}`);
@@ -99,8 +117,35 @@ const API = (() => {
     generateAndSaveReport(matchId, reportType) { return request(`/api/matches/${matchId}/reports/generate?reportType=${reportType}`, { method: 'POST' }); },
     deleteReport(reportId) { return request(`/api/reports/${reportId}`, { method: 'DELETE' }); },
 
-    // SSE stream
-    streamAnalysis(matchId) { return BASE + `/api/matches/${matchId}/analysis/stream`; },
-    streamReport(matchId) { return BASE + `/api/matches/${matchId}/report/stream`; }
+    // SSE stream（EventSource 不支持自定义请求头，通过 query 参数传递 token）
+    streamAnalysis(matchId) {
+      const token = localStorage.getItem('token') || '';
+      return BASE + `/api/matches/${matchId}/analysis/stream?token=${encodeURIComponent(token)}`;
+    },
+    streamReport(matchId) {
+      const token = localStorage.getItem('token') || '';
+      return BASE + `/api/matches/${matchId}/report/stream?token=${encodeURIComponent(token)}`;
+    },
+
+    // Auth / Profile
+    getMe() { return request('/api/auth/me'); },
+    updateNickname(nickname) { return request('/api/auth/nickname', { method: 'PUT', body: JSON.stringify({ nickname }) }); },
+    updatePassword(oldPassword, newPassword) { return request('/api/auth/password', { method: 'PUT', body: JSON.stringify({ oldPassword, newPassword }) }); },
+
+    // Client (USER)
+    clientQueryMatches(params = {}) { return request(`/api/client/matches${toQuery(params)}`); },
+    clientRecommendMatches(preference) { return request('/api/client/matches/recommend', { method: 'POST', body: JSON.stringify({ preference }) }); },
+    clientGetMatch(matchId) { return request(`/api/client/matches/${matchId}`); },
+    clientGetMatchEvents(matchId) { return request(`/api/client/matches/${matchId}/events`); },
+    clientGetStatistics(matchId) { return request(`/api/client/matches/${matchId}/statistics`); },
+    clientGetMatchReports(matchId) { return request(`/api/client/matches/${matchId}/reports`); },
+
+    // SSE 赛事问答助手
+    streamQa(matchId, question) {
+      const token = localStorage.getItem('token') || '';
+      return BASE + `/api/client/matches/${matchId}/qa/stream?token=${encodeURIComponent(token)}&question=${encodeURIComponent(question)}`;
+    },
+    getQaHistory(matchId) { return request(`/api/client/matches/${matchId}/qa/history`); },
+    clearQaHistory(matchId) { return request(`/api/client/matches/${matchId}/qa/history`, { method: 'DELETE' }); }
   };
 })();

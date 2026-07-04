@@ -111,7 +111,7 @@ public class MatchRepository {
     }
 
     /**
-     * 查询所有比赛（含队伍信息，不含球员和事件）
+     * 查询所有比赛（含队伍信息和事件，不含球员）
      */
     public List<Match> findAll() {
         List<Match> matches = matchMapper.selectList(null);
@@ -125,6 +125,12 @@ public class MatchRepository {
                 Team awayTeam = teamMapper.selectById(match.getAwayTeamId());
                 match.setAwayTeam(awayTeam);
             }
+            // 加载事件列表，以便计算比分统计
+            List<MatchEvent> events = matchEventMapper.selectList(
+                    new LambdaQueryWrapper<MatchEvent>()
+                            .eq(MatchEvent::getMatchId, match.getMatchId())
+                            .orderByAsc(MatchEvent::getEventTime));
+            match.setEvents(events);
         }
         return matches;
     }

@@ -4,7 +4,8 @@
 -- ============================================================
 
 -- 创建数据库
-CREATE DATABASE IF NOT EXISTS matchlens DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+DROP DATABASE IF EXISTS matchlens;
+CREATE DATABASE matchlens DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE matchlens;
 
 -- ============================================================
@@ -12,7 +13,10 @@ USE matchlens;
 -- ============================================================
 
 -- 队伍表
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS t_qa_message;
 DROP TABLE IF EXISTS t_match_report;
+DROP TABLE IF EXISTS t_ai_call_log;
 DROP TABLE IF EXISTS t_player_statistics;
 DROP TABLE IF EXISTS t_match_event;
 DROP TABLE IF EXISTS t_player;
@@ -99,6 +103,19 @@ CREATE TABLE t_ai_call_log (
     INDEX idx_call_time (call_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- AI 问答消息表
+CREATE TABLE t_qa_message (
+    message_id  VARCHAR(36)  PRIMARY KEY,
+    match_id    VARCHAR(36)  NOT NULL,
+    user_id     BIGINT       NOT NULL COMMENT '提问用户 ID',
+    role        VARCHAR(10)  NOT NULL COMMENT 'user/ai',
+    content     TEXT         NOT NULL,
+    create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (match_id) REFERENCES t_match(match_id),
+    INDEX idx_match_user (match_id, user_id),
+    INDEX idx_create_time (create_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- 比赛报告表
 CREATE TABLE t_match_report (
     report_id    VARCHAR(36)  PRIMARY KEY,
@@ -119,10 +136,10 @@ CREATE TABLE t_match_report (
 -- 2. 插入示例数据 —— 篮球赛（完整演示）
 -- ============================================================
 
--- 队伍
+-- 队伍（score 字段不持久化，比分由事件动态计算，此处仅做初始值参考）
 INSERT INTO t_team (team_id, team_name, score) VALUES
-('t001', '烈焰队',  92),
-('t002', '风暴队',  86);
+('t001', '烈焰队',  43),
+('t002', '风暴队',  37);
 
 -- 比赛
 INSERT INTO t_match (match_id, match_name, sport_type, status, home_team_id, away_team_id, create_time) VALUES
@@ -191,27 +208,26 @@ INSERT INTO t_match_event (event_id, match_id, team_id, player_id, event_type, s
 ('e039', 'm001', 't002', 'p010', 'SCORE',    2, '2026-06-20 20:03:00', '马飞篮下得分'),
 ('e040', 'm001', 't001', 'p001', 'SCORE',    2, '2026-06-20 20:05:00', '张明锁定胜局');
 
--- 球员统计 —— 烈焰队
+-- 球员统计 —— 烈焰队（与事件严格一致）
 INSERT INTO t_player_statistics (player_id, match_id, stat_key, stat_value) VALUES
--- 张明 #1: 28分, 1篮板, 1犯规
+-- 张明 #1: 28分, 1助攻, 1犯规
 ('p001', 'm001', 'SCORE',    28),
-('p001', 'm001', 'REBOUND',   1),
+('p001', 'm001', 'ASSIST',    1),
 ('p001', 'm001', 'FOUL',      1),
--- 李强 #7: 6分, 1助攻, 2篮板
-('p002', 'm001', 'SCORE',     6),
+-- 李强 #7: 4分, 1助攻, 1篮板
+('p002', 'm001', 'SCORE',     4),
 ('p002', 'm001', 'ASSIST',    1),
-('p002', 'm001', 'REBOUND',   2),
--- 王浩 #11: 2分, 2助攻, 1篮板
-('p003', 'm001', 'SCORE',     2),
-('p003', 'm001', 'ASSIST',    2),
+('p002', 'm001', 'REBOUND',   1),
+-- 王浩 #11: 4分, 1助攻, 1篮板
+('p003', 'm001', 'SCORE',     4),
+('p003', 'm001', 'ASSIST',    1),
 ('p003', 'm001', 'REBOUND',   1),
--- 赵鹏 #23: 7分, 1抢断
-('p004', 'm001', 'SCORE',     7),
+-- 赵鹏 #23: 5分, 1抢断
+('p004', 'm001', 'SCORE',     5),
 ('p004', 'm001', 'STEAL',     1),
--- 刘洋 #30: 0分, 1失误, 1暂停
+-- 刘洋 #30: 0分, 1失误
 ('p005', 'm001', 'SCORE',     0),
-('p005', 'm001', 'TURNOVER',  1),
-('p005', 'm001', 'TIMEOUT',   1);
+('p005', 'm001', 'TURNOVER',  1);
 
 -- 球员统计 —— 风暴队
 INSERT INTO t_player_statistics (player_id, match_id, stat_key, stat_value) VALUES
@@ -296,8 +312,8 @@ INSERT INTO t_player_statistics (player_id, match_id, stat_key, stat_value) VALU
 
 -- 队伍
 INSERT INTO t_team (team_id, team_name, score) VALUES
-('t005', '闪电队', 3),
-('t006', '雷霆队', 1);
+('t005', '闪电队', 6),
+('t006', '雷霆队', 4);
 
 -- 比赛
 INSERT INTO t_match (match_id, match_name, sport_type, status, home_team_id, away_team_id, create_time) VALUES
@@ -317,42 +333,69 @@ INSERT INTO t_player (player_id, player_name, team_id, number, position, age, he
 ('p027', '魏亮',   't006', 9,  '接应',   24, 194, 87),
 ('p028', '秦浩',   't006', 14, '二传手', 26, 189, 80);
 
--- 比赛事件 —— 排球赛
+-- 比赛事件 —— 排球赛（SCORE事件计算比分，SERVE_ACE/BLOCK仅作技术统计 score_value=0）
 INSERT INTO t_match_event (event_id, match_id, team_id, player_id, event_type, score_value, event_time, description) VALUES
-('e051', 'm003', 't005', 'p021', 'SERVE_ACE', 1, '2026-06-22 18:05:00', '田宇发球直接得分'),
-('e052', 'm003', 't005', 'p022', 'BLOCK',     1, '2026-06-22 18:08:00', '贺磊拦网得分'),
-('e053', 'm003', 't006', 'p025', 'SCORE',     1, '2026-06-22 18:10:00', '谢斌扣球得分'),
+-- 第一局
+('e051', 'm003', 't005', 'p021', 'SCORE',     1, '2026-06-22 18:05:00', '田宇扣球得分'),
+('e052', 'm003', 't006', 'p025', 'SCORE',     1, '2026-06-22 18:08:00', '谢斌扣球得分'),
+('e053', 'm003', 't005', 'p022', 'BLOCK',     0, '2026-06-22 18:10:00', '贺磊拦网成功'),
 ('e054', 'm003', 't006', 'p026', 'ERROR',     0, '2026-06-22 18:12:00', '苏杰发球失误'),
-('e055', 'm003', 't005', 'p023', 'SERVE_ACE', 1, '2026-06-22 18:15:00', '邓超发球得分'),
-('e056', 'm003', 't005', 'p024', 'BLOCK',     1, '2026-06-22 18:18:00', '彭涛拦网得分'),
-('e057', 'm003', 't006', 'p027', 'SCORE',     1, '2026-06-22 18:20:00', '魏亮扣球得分'),
-('e058', 'm003', 't006', 'p028', 'ERROR',     0, '2026-06-22 18:22:00', '秦浩扣球出界'),
-('e059', 'm003', 't005', 'p021', 'SCORE',     1, '2026-06-22 18:25:00', '田宇扣球得分'),
-('e060', 'm003', 't005', 'p022', 'SERVE_ACE', 1, '2026-06-22 18:28:00', '贺磊发球直接得分'),
-('e061', 'm003', 't006', 'p026', 'BLOCK',     1, '2026-06-22 18:30:00', '苏杰拦网得分'),
-('e062', 'm003', 't006', 'p025', 'ERROR',     0, '2026-06-22 18:32:00', '谢斌发球下网'),
-('e063', 'm003', 't005', 'p023', 'SCORE',     1, '2026-06-22 18:35:00', '邓超关键扣球得分'),
-('e064', 'm003', 't006', 'p027', 'ERROR',     0, '2026-06-22 18:38:00', '魏亮触网犯规'),
-('e065', 'm003', 't005', 'p024', 'SCORE',     1, '2026-06-22 18:40:00', '彭涛扣球锁定胜局');
+('e055', 'm003', 't005', 'p023', 'SCORE',     1, '2026-06-22 18:15:00', '邓超扣球得分'),
+('e056', 'm003', 't005', 'p021', 'SERVE_ACE', 0, '2026-06-22 18:18:00', '田宇发球直接得分'),
+-- 第二局
+('e057', 'm003', 't006', 'p027', 'SCORE',     1, '2026-06-22 18:25:00', '魏亮扣球得分'),
+('e058', 'm003', 't005', 'p024', 'SCORE',     1, '2026-06-22 18:28:00', '彭涛二次球得分'),
+('e059', 'm003', 't006', 'p025', 'SCORE',     1, '2026-06-22 18:30:00', '谢斌反击得分'),
+('e060', 'm003', 't005', 'p022', 'BLOCK',     0, '2026-06-22 18:32:00', '贺磊再次拦网成功'),
+('e061', 'm003', 't006', 'p026', 'ERROR',     0, '2026-06-22 18:34:00', '苏杰扣球出界'),
+('e062', 'm003', 't005', 'p023', 'SERVE_ACE', 0, '2026-06-22 18:36:00', '邓超发球直接得分'),
+-- 第三局
+('e063', 'm003', 't006', 'p027', 'SCORE',     1, '2026-06-22 18:42:00', '魏亮强攻得分'),
+('e064', 'm003', 't005', 'p021', 'SCORE',     1, '2026-06-22 18:45:00', '田宇关键扣球'),
+('e065', 'm003', 't006', 'p028', 'ERROR',     0, '2026-06-22 18:47:00', '秦浩传球失误'),
+('e066', 'm003', 't006', 'p026', 'BLOCK',     0, '2026-06-22 18:48:00', '苏杰拦网成功'),
+('e067', 'm003', 't005', 'p022', 'SCORE',     1, '2026-06-22 18:50:00', '贺磊快攻得分'),
+('e068', 'm003', 't005', 'p024', 'BLOCK',     0, '2026-06-22 18:52:00', '彭涛拦网成功'),
+('e069', 'm003', 't006', 'p027', 'ERROR',     0, '2026-06-22 18:54:00', '魏亮触网犯规'),
+('e070', 'm003', 't005', 'p023', 'SCORE',     1, '2026-06-22 18:55:00', '邓超扣球锁定胜局');
 
--- 球员统计 —— 闪电队
+-- 球员统计 —— 闪电队（与事件严格一致）
 INSERT INTO t_player_statistics (player_id, match_id, stat_key, stat_value) VALUES
 ('p021', 'm003', 'SCORE',     2),
 ('p021', 'm003', 'SERVE_ACE', 1),
-('p022', 'm003', 'SCORE',     0),
-('p022', 'm003', 'BLOCK',     1),
-('p022', 'm003', 'SERVE_ACE', 1),
+('p022', 'm003', 'SCORE',     1),
+('p022', 'm003', 'BLOCK',     2),
 ('p023', 'm003', 'SCORE',     2),
 ('p023', 'm003', 'SERVE_ACE', 1),
 ('p024', 'm003', 'SCORE',     1),
 ('p024', 'm003', 'BLOCK',     1);
 
--- 球员统计 —— 雷霆队
+-- 球员统计 —— 雷霆队（与事件严格一致）
 INSERT INTO t_player_statistics (player_id, match_id, stat_key, stat_value) VALUES
-('p025', 'm003', 'SCORE',     1),
-('p025', 'm003', 'ERROR',     1),
+('p025', 'm003', 'SCORE',     2),
 ('p026', 'm003', 'BLOCK',     1),
 ('p026', 'm003', 'ERROR',     1),
-('p027', 'm003', 'SCORE',     1),
+('p027', 'm003', 'SCORE',     2),
 ('p027', 'm003', 'ERROR',     1),
 ('p028', 'm003', 'ERROR',     1);
+
+
+-- ============================================================
+-- 5. 用户表
+-- ============================================================
+
+DROP TABLE IF EXISTS t_user;
+CREATE TABLE t_user (
+    user_id     BIGINT       AUTO_INCREMENT PRIMARY KEY,
+    username    VARCHAR(50)  NOT NULL UNIQUE,
+    password    VARCHAR(200) NOT NULL,
+    nickname    VARCHAR(50),
+    role        ENUM('ADMIN', 'USER') NOT NULL DEFAULT 'USER',
+    create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 默认管理员账号：admin / admin123
+INSERT INTO t_user (username, password, nickname, role) VALUES
+('admin', 'admin123', '管理员', 'ADMIN');
+INSERT INTO t_user (username, password, nickname, role) VALUES
+    ('test', '1234', '测试', 'USER');

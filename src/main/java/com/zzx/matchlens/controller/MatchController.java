@@ -27,7 +27,14 @@ public class MatchController {
 
     @GetMapping
     public List<Match> getAllMatches() {
-        return matchService.getAllMatches();
+        List<Match> matches = matchService.getAllMatches();
+        // 重算统计信息（statistics 未持久化，每次加载需从事件重新计算）
+        for (Match match : matches) {
+            if (match.getHomeTeam() != null && match.getAwayTeam() != null) {
+                match.getStatistics().updateFromMatch(match);
+            }
+        }
+        return matches;
     }
 
     @GetMapping("/{id}")

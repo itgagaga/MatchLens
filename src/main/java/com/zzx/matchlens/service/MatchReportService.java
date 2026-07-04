@@ -64,6 +64,9 @@ public class MatchReportService {
             throw new RuntimeException("reportType 只能是 SITUATION 或 REVIEW");
         }
 
+        // 删除同类型的旧报告（新报告覆盖旧报告）
+        deleteReportsByType(matchId, request.getReportType());
+
         MatchReport report = new MatchReport();
         report.setReportId(UUID.randomUUID().toString());
         report.setMatchId(matchId);
@@ -105,6 +108,9 @@ public class MatchReportService {
 
         String generatedBy = checkGeneratedBy(matchId, agentType);
 
+        // 删除同类型的旧报告（新报告覆盖旧报告）
+        deleteReportsByType(matchId, reportType);
+
         String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
         MatchReport report = new MatchReport();
         report.setReportId(UUID.randomUUID().toString());
@@ -125,6 +131,19 @@ public class MatchReportService {
             throw new RuntimeException("报告不存在: " + reportId);
         }
         matchReportMapper.deleteById(reportId);
+    }
+
+    /**
+     * 删除指定比赛的指定类型的所有报告（用于覆盖更新）
+     */
+    private void deleteReportsByType(String matchId, String reportType) {
+        try {
+            QueryWrapper<MatchReport> qw = new QueryWrapper<>();
+            qw.eq("match_id", matchId).eq("report_type", reportType);
+            matchReportMapper.delete(qw);
+        } catch (Exception e) {
+            System.err.println("[MatchReportService] 删除旧报告失败: " + e.getMessage());
+        }
     }
 
     private MatchReportVO toVO(MatchReport report) {

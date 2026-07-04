@@ -144,6 +144,44 @@ public class RemoteModelAgent implements AiAgent {
         }
     }
 
+    /**
+     * 通用 AI 调用（不依赖 Match 对象），用于智能推荐等场景。
+     */
+    public AiAgentResponse callGeneric(String systemPrompt, String userPrompt, AiAgentType agentType) {
+        if (apiKey == null || apiKey.isBlank()) {
+            return AiAgentResponse.failure("API Key 未配置", 0, agentType, "N/A");
+        }
+
+        long start = System.currentTimeMillis();
+        Exception lastException = null;
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                String content = chatClient.prompt()
+                        .system(systemPrompt)
+                        .user(userPrompt)
+                        .call()
+                        .content();
+                long elapsed = System.currentTimeMillis() - start;
+
+                if (content != null && !content.trim().isEmpty()) {
+                    AiAgentResponse resp = AiAgentResponse.success(content, elapsed, agentType, "N/A");
+                    logResponse(resp, systemPrompt + "\n---\n" + userPrompt);
+                    return resp;
+                }
+                return AiAgentResponse.failure("AI 返回内容为空", elapsed, agentType, "N/A");
+            } catch (Exception e) {
+                lastException = e;
+                if (attempt < maxRetries) {
+                    try { Thread.sleep(1000); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); }
+                }
+            }
+        }
+
+        String errorMsg = "AI 调用失败: " + (lastException != null ? lastException.getMessage() : "未知错误");
+        return AiAgentResponse.failure(errorMsg, System.currentTimeMillis() - start, agentType, "N/A");
+    }
+
     private void logResponse(AiAgentResponse response, String prompt) {
         try {
             aiCallLogService.log(response, prompt);

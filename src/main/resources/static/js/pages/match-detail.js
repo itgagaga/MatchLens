@@ -12,6 +12,7 @@ const MatchDetailPage = {
     document.getElementById('linkReports').href = `./reports.html?matchId=${this.matchId}`;
     await this.loadMatch();
     await this.loadEvents();
+    await this.loadLatestReports();
   },
 
   async loadMatch() {
@@ -242,9 +243,13 @@ const MatchDetailPage = {
 
   getAnalysis() {
     const el = document.getElementById('analysisResult');
+    const latestEl = document.getElementById('latestAnalysis');
     const btn = document.getElementById('btnAnalysis');
+    // 开始生成时：隐藏历史报告，显示 streaming 区域
     el.style.display = 'block';
     el.textContent = '';
+    latestEl.style.display = 'none';
+    latestEl.innerHTML = '';
     btn.disabled = true;
     btn.textContent = '正在生成...';
     const url = API.streamAnalysis(this.matchId);
@@ -252,24 +257,32 @@ const MatchDetailPage = {
     evtSource.addEventListener('chunk', e => { el.textContent += e.data; });
     evtSource.addEventListener('done', () => {
       evtSource.close();
-      el.innerHTML = Common.markdownToHtml(el.textContent);
+      // 生成完成：隐藏 streaming，刷新历史报告
+      el.style.display = 'none';
+      el.textContent = '';
       btn.disabled = false;
       btn.textContent = '生成态势分析';
+      this.loadLatestReports();
     });
     evtSource.addEventListener('error', e => {
       evtSource.close();
-      if (el.textContent) el.innerHTML = Common.markdownToHtml(el.textContent);
-      else el.textContent = '生成失败';
+      el.style.display = 'none';
+      el.textContent = '';
       btn.disabled = false;
       btn.textContent = '生成态势分析';
+      this.loadLatestReports();
     });
   },
 
   getReviewReport() {
     const el = document.getElementById('reportResult');
+    const latestEl = document.getElementById('latestReview');
     const btn = document.getElementById('btnReport');
+    // 开始生成时：隐藏历史报告，显示 streaming 区域
     el.style.display = 'block';
     el.textContent = '';
+    latestEl.style.display = 'none';
+    latestEl.innerHTML = '';
     btn.disabled = true;
     btn.textContent = '正在生成...';
     const url = API.streamReport(this.matchId);
@@ -277,17 +290,57 @@ const MatchDetailPage = {
     evtSource.addEventListener('chunk', e => { el.textContent += e.data; });
     evtSource.addEventListener('done', () => {
       evtSource.close();
-      el.innerHTML = Common.markdownToHtml(el.textContent);
+      // 生成完成：隐藏 streaming，刷新历史报告
+      el.style.display = 'none';
+      el.textContent = '';
       btn.disabled = false;
       btn.textContent = '生成赛后复盘';
+      this.loadLatestReports();
     });
     evtSource.addEventListener('error', e => {
       evtSource.close();
-      if (el.textContent) el.innerHTML = Common.markdownToHtml(el.textContent);
-      else el.textContent = '生成失败';
+      el.style.display = 'none';
+      el.textContent = '';
       btn.disabled = false;
       btn.textContent = '生成赛后复盘';
+      this.loadLatestReports();
     });
+  },
+
+  async loadLatestReports() {
+    try {
+      const reports = await API.getMatchReports(this.matchId);
+      if (!reports || !reports.length) {
+        document.getElementById('latestAnalysis').innerHTML = '<div class="empty" style="color:var(--text-secondary)">暂无态势分析报告，点击上方按钮生成</div>';
+        document.getElementById('latestReview').innerHTML = '<div class="empty" style="color:var(--text-secondary)">暂无复盘报告，点击上方按钮生成</div>';
+        return;
+      }
+
+      let latestAnalysis = null;
+      let latestReview = null;
+      for (const r of reports) {
+        if (r.reportType === 'SITUATION' && !latestAnalysis) latestAnalysis = r;
+        if (r.reportType === 'REVIEW' && !latestReview) latestReview = r;
+      }
+
+      const analysisEl = document.getElementById('latestAnalysis');
+      if (latestAnalysis) {
+        analysisEl.innerHTML = Common.markdownToHtml(latestAnalysis.content);
+        analysisEl.style.display = 'block';
+      } else {
+        analysisEl.innerHTML = '<div class="empty" style="color:var(--text-secondary)">暂无态势分析报告，点击上方按钮生成</div>';
+      }
+
+      const reviewEl = document.getElementById('latestReview');
+      if (latestReview) {
+        reviewEl.innerHTML = Common.markdownToHtml(latestReview.content);
+        reviewEl.style.display = 'block';
+      } else {
+        reviewEl.innerHTML = '<div class="empty" style="color:var(--text-secondary)">暂无复盘报告，点击上方按钮生成</div>';
+      }
+    } catch (e) {
+      // 加载报告失败时静默处理
+    }
   }
 };
 

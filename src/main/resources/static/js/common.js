@@ -121,9 +121,74 @@ const Common = {
     if (el) el.classList.remove('active');
   },
 
+  // 检查管理员登录状态
+  checkAdminAuth() {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+    if (!token || role !== 'ADMIN') {
+      window.location.href = './login.html';
+      return false;
+    }
+    return true;
+  },
+
+  // 注入用户下拉菜单到 topbar
+  injectUserDropdown() {
+    const topbar = document.querySelector('.topbar');
+    if (!topbar) return;
+    const nickname = localStorage.getItem('nickname') || localStorage.getItem('username') || '用户';
+
+    const userDiv = document.createElement('div');
+    userDiv.className = 'user-dropdown';
+    userDiv.innerHTML = `
+      <button class="user-dropdown-trigger" onclick="Common.toggleUserMenu()">
+        <span class="user-avatar">👤</span>
+        <span class="user-name">${nickname}</span>
+        <span class="user-arrow">▾</span>
+      </button>
+      <div class="user-dropdown-menu" id="userDropdownMenu">
+        <a href="./profile.html" class="dropdown-item">👤 个人中心</a>
+        <a href="#" onclick="Common.logout(); return false;" class="dropdown-item" style="color: var(--danger);">↗ 退出登录</a>
+      </div>
+    `;
+    topbar.appendChild(userDiv);
+
+    // 点击其他区域关闭下拉菜单
+    document.addEventListener('click', (e) => {
+      if (!userDiv.contains(e.target)) {
+        document.getElementById('userDropdownMenu').classList.remove('show');
+      }
+    });
+  },
+
+  // 切换用户下拉菜单
+  toggleUserMenu() {
+    const menu = document.getElementById('userDropdownMenu');
+    if (menu) menu.classList.toggle('show');
+  },
+
+  // 退出登录
+  logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+    localStorage.removeItem('nickname');
+    localStorage.removeItem('role');
+    window.location.href = './login.html';
+  },
+
   // 初始化页面
   init() {
+    const page = window.location.pathname.split('/').pop() || 'index.html';
+    // 客户端页面跳过管理员检查
+    if (page.startsWith('client-')) {
+      this.highlightNav();
+      return;
+    }
+    // 检查管理员登录
+    if (!this.checkAdminAuth()) return;
     this.highlightNav();
+    this.injectUserDropdown();
   }
 };
 
