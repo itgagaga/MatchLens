@@ -46,8 +46,8 @@ public class StatisticsRebuildService {
             replayEvent(match, event);
         }
 
-        // 5. 更新统计快照
-        match.getStatistics().updateFromMatch(match);
+        // 5. 计算聚合统计（不重复重放事件，replayEvent 已重建球员统计和比分）
+        match.getStatistics().computeAggregates(match);
 
         // 6. 持久化
         matchRepository.save(match);

@@ -43,6 +43,10 @@ body {
   backdrop-filter: blur(14px);
 }
 
+.topbar > .brand { flex: 0 0 auto; }
+.topbar > .nav { flex: 1; justify-content: center; }
+.topbar > .user-dropdown { flex: 0 0 auto; }
+
 .brand {
   color: var(--text-light);
   font-size: 24px;

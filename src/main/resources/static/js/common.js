@@ -137,6 +137,9 @@ const Common = {
     const topbar = document.querySelector('.topbar');
     if (!topbar) return;
     const nickname = localStorage.getItem('nickname') || localStorage.getItem('username') || '用户';
+    const page = window.location.pathname.split('/').pop() || 'index.html';
+    const isClient = page.startsWith('client-');
+    const profileLink = isClient ? './client-profile.html' : './profile.html';
 
     const userDiv = document.createElement('div');
     userDiv.className = 'user-dropdown';
@@ -147,7 +150,7 @@ const Common = {
         <span class="user-arrow">▾</span>
       </button>
       <div class="user-dropdown-menu" id="userDropdownMenu">
-        <a href="./profile.html" class="dropdown-item">👤 个人中心</a>
+        <a href="${profileLink}" class="dropdown-item">👤 个人中心</a>
         <a href="#" onclick="Common.logout(); return false;" class="dropdown-item" style="color: var(--danger);">↗ 退出登录</a>
       </div>
     `;
@@ -180,9 +183,10 @@ const Common = {
   // 初始化页面
   init() {
     const page = window.location.pathname.split('/').pop() || 'index.html';
-    // 客户端页面跳过管理员检查
+    // 客户端页面跳过管理员检查，但仍注入用户下拉菜单
     if (page.startsWith('client-')) {
       this.highlightNav();
+      this.injectUserDropdown();
       return;
     }
     // 检查管理员登录

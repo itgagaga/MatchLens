@@ -12,9 +12,9 @@
   <header class="topbar">
     <a class="brand" href="./client-index.html">🏆 MatchLens</a>
     <nav class="nav">
-      <span id="userGreeting" class="nav-link" style="color:var(--text-secondary)"></span>
       <a class="nav-link" href="./client-index.html">赛事大厅</a>
-      <button class="btn btn-sm btn-red" onclick="ClientMatchDetailPage.logout()" style="margin-left:8px">退出</button>
+      <a class="nav-link" href="./client-teams.html">球队阵容</a>
+      <a class="nav-link" href="./client-rankings.html">排行榜</a>
     </nav>
   </header>
 
@@ -31,6 +31,9 @@
         <section class="card">
           <h2>比赛信息</h2>
           <div id="matchInfo" class="match-info-grid" style="margin-top:12px"></div>
+          <div style="margin-top:14px">
+            <a id="rosterLink" class="roster-link-btn" href="#">👥 查看球队阵容</a>
+          </div>
         </section>
 
         <section class="grid grid-2">

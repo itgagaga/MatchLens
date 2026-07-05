@@ -15,8 +15,6 @@ const ClientMatchDetailPage = {
       window.location.href = './matches.html';
       return;
     }
-    const nickname = localStorage.getItem('nickname') || localStorage.getItem('username');
-    document.getElementById('userGreeting').textContent = '👋 ' + nickname;
 
     this.matchId = Common.getParam('matchId');
     if (!this.matchId) {
@@ -57,6 +55,8 @@ const ClientMatchDetailPage = {
       }
       this.renderScoreBoard();
       this.renderMatchInfo();
+      // 设置阵容链接
+      document.getElementById('rosterLink').href = './client-rosters.html?matchId=' + this.matchId;
     } catch (e) {
       this.toast('加载比赛失败');
     }

@@ -146,6 +146,10 @@ const API = (() => {
       return BASE + `/api/client/matches/${matchId}/qa/stream?token=${encodeURIComponent(token)}&question=${encodeURIComponent(question)}`;
     },
     getQaHistory(matchId) { return request(`/api/client/matches/${matchId}/qa/history`); },
-    clearQaHistory(matchId) { return request(`/api/client/matches/${matchId}/qa/history`, { method: 'DELETE' }); }
+    clearQaHistory(matchId) { return request(`/api/client/matches/${matchId}/qa/history`, { method: 'DELETE' }); },
+
+    // Client Teams (USER)
+    clientGetTeams() { return request('/api/client/teams'); },
+    clientGetTeam(teamId) { return request(`/api/client/teams/${teamId}`); }
   };
 })();

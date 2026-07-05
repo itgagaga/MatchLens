@@ -27,12 +27,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/auth/me",
                         "/api/auth/nickname",
                         "/api/auth/password",
-                        "/api/client/**"
+                        "/api/client/**",
+                        "/api/rankings/**"
                 );
 
-        // 客户端接口拦截器：/api/client/** 需要登录（任意角色）
+        // 客户端接口拦截器：/api/client/** 及排行榜等共享接口，需要登录（任意角色）
         registry.addInterceptor(jwtInterceptor)
-                .addPathPatterns("/api/client/**", "/api/auth/me", "/api/auth/nickname", "/api/auth/password");
+                .addPathPatterns("/api/client/**", "/api/auth/me", "/api/auth/nickname", "/api/auth/password", "/api/rankings/**");
     }
 
     /**

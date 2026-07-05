@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatchLens - 球队阵容</title>
+  <link rel="stylesheet" href="./css/theme.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/pages.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./client-index.html">🏆 MatchLens</a>
+    <nav class="nav">
+      <a class="nav-link" href="./client-index.html">赛事大厅</a>
+      <a class="nav-link" href="./client-teams.html">球队阵容</a>
+      <a class="nav-link" href="./client-rankings.html">排行榜</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <a class="btn btn-sm" id="backLink" href="#">← 返回比赛详情</a>
+      <span id="breadcrumb" style="font-size:14px;color:var(--text-muted)"></span>
+    </div>
+
+    <!-- 比赛信息栏 -->
+    <section class="card">
+      <div id="matchHeader"></div>
+    </section>
+
+    <!-- 甲方阵容 -->
+    <section class="card" id="homeTeamSection">
+      <div id="homeTeamHeader"></div>
+      <div id="homePlayers" class="player-cards-grid"></div>
+    </section>
+
+    <!-- 乙方阵容 -->
+    <section class="card" id="awayTeamSection">
+      <div id="awayTeamHeader"></div>
+      <div id="awayPlayers" class="player-cards-grid"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="./js/constants.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/common.js"></script>
+  <script src="./js/pages/client-rosters.js"></script>
+</body>
+</html>

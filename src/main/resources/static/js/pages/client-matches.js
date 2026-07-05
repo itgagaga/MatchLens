@@ -10,7 +10,6 @@ const ClientPage = {
       return;
     }
     const nickname = localStorage.getItem('nickname') || localStorage.getItem('username');
-    document.getElementById('userGreeting').textContent = '👋 ' + nickname;
     document.getElementById('welcomeTitle').textContent = '欢迎回来，' + nickname + '！';
 
     // 回车键触发搜索
@@ -87,8 +86,9 @@ const ClientPage = {
           <div class="match-meta">
             ${this.sportBadge(m.sportType)} · ${this.formatTime(m.createTime)}
           </div>
-          <div style="margin-top:12px">
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
             <a href="./client-match-detail.html?matchId=${m.matchId}" class="btn btn-sm">进入详情</a>
+            <a href="./client-rosters.html?matchId=${m.matchId}" class="btn btn-sm btn-outline">👥 球队阵容</a>
           </div>
         </div>
       `;
@@ -171,8 +171,9 @@ const ClientPage = {
             ${this.sportBadge(rec.sportType)}
             ${scoreDiff <= 5 && scoreA + scoreB > 0 ? '<span class="badge badge-orange" style="margin-left:4px">焦灼</span>' : ''}
           </div>
-          <div style="margin-top:10px">
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
             <a href="./client-match-detail.html?matchId=${rec.matchId}" class="btn btn-sm">进入详情</a>
+            <a href="./client-rosters.html?matchId=${rec.matchId}" class="btn btn-sm btn-outline">👥 球队阵容</a>
           </div>
         </div>
       `;

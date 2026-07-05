@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatchLens - 球队详情</title>
+  <link rel="stylesheet" href="./css/theme.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/pages.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./client-index.html">🏆 MatchLens</a>
+    <nav class="nav">
+      <a class="nav-link" href="./client-index.html">赛事大厅</a>
+      <a class="nav-link active" href="./client-teams.html">球队阵容</a>
+      <a class="nav-link" href="./client-rankings.html">排行榜</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div style="margin-bottom:16px">
+      <a class="btn btn-sm" href="./client-teams.html">← 返回球队列表</a>
+    </div>
+
+    <!-- 球队信息横幅 -->
+    <section id="teamBanner"></section>
+
+    <!-- 球员详情列表 -->
+    <section class="card">
+      <h2 style="margin-bottom:14px; color: var(--text-main); font-size: 20px;">球员阵容</h2>
+      <div id="playersContainer"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="./js/constants.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/common.js"></script>
+  <script src="./js/pages/client-team-detail.js"></script>
+</body>
+</html>
