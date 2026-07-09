@@ -6,8 +6,28 @@ import com.zzx.matchlens.common.SportType;
 import com.zzx.matchlens.entity.Match;
 import com.zzx.matchlens.entity.MatchEvent;
 
+/**
+ * 分值校验处理器（责任链第五环 / 末尾）。
+ * <p>
+ * 仅对得分事件（{@link EventType#SCORE}）进行分值合法性校验：
+ * <ul>
+ *   <li>篮球：单次得分不超过 3 分</li>
+ *   <li>足球：进球得分只能为 1</li>
+ *   <li>排球：得分只能为 1</li>
+ *   <li>通用赛事：不做特殊限制</li>
+ * </ul>
+ * 非得分事件直接跳过。
+ * </p>
+ */
 public class ScoreCheckHandler extends EventCheckHandler {
 
+    /**
+     * 校验得分事件的分值是否合法。
+     *
+     * @param match 比赛实体，用于获取赛事类型
+     * @param event 待校验的比赛事件
+     * @return 校验结果
+     */
     @Override
     protected Result<String> check(Match match, MatchEvent event) {
         if (event.getEventType() != EventType.SCORE) {

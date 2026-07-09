@@ -33,15 +33,15 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/client/matches")
 public class ClientMatchController {
 
-    private final MatchService matchService;
-    private final RemoteModelAgent remoteModelAgent;
-    private final DataCollectAgent dataCollectAgent;
-    private final MatchRepository matchRepository;
-    private final EventService eventService;
-    private final StatisticsService statisticsService;
-    private final MatchReportService matchReportService;
-    private final QaMessageService qaMessageService;
-    private final ExecutorService executor = Executors.newCachedThreadPool();
+    private final MatchService matchService;                       // 比赛服务，提供比赛 CRUD 和状态管理
+    private final RemoteModelAgent remoteModelAgent;               // 远程 AI 模型智能体，用于调用 AI 推荐和问答
+    private final DataCollectAgent dataCollectAgent;               // 数据采集智能体，收集比赛结构化数据供 AI 分析
+    private final MatchRepository matchRepository;                 // 比赛仓储层，提供比赛实体的数据库访问
+    private final EventService eventService;                       // 事件服务，处理比赛事件的查询和筛选
+    private final StatisticsService statisticsService;             // 统计服务，提供比赛统计数据查询
+    private final MatchReportService matchReportService;           // 报告服务，提供比赛报告的查询
+    private final QaMessageService qaMessageService;               // 问答消息服务，管理 AI 问答的历史记录
+    private final ExecutorService executor = Executors.newCachedThreadPool(); // 线程池，用于异步执行 SSE 流式 AI 调用
 
     public ClientMatchController(MatchService matchService,
                                  RemoteModelAgent remoteModelAgent,

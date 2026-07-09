@@ -11,10 +11,14 @@ import com.zzx.matchlens.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 用户认证接口（注册、登录、个人信息管理）
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    /** 用户服务，处理注册、登录、个人信息等业务逻辑 */
     private final UserService userService;
 
     public AuthController(UserService userService) {

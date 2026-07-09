@@ -7,6 +7,15 @@ import com.zzx.matchlens.entity.Team;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+/**
+ * 比分板观察者（观察者模式，优先级 1 / 最高）。
+ * <p>
+ * 监听比赛事件，当发生得分事件（{@link EventType#SCORE}）时，
+ * 将对应分值累加到得分队伍的总分上，并输出实时比分信息。
+ * 使用 {@code @Order(1)} 确保在所有观察者中最先执行，
+ * 保证后续观察者能读取到最新的比分。
+ * </p>
+ */
 @Component
 @Order(1)
 public class ScoreBoardObserver implements MatchObserver {

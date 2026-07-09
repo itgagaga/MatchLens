@@ -6,6 +6,14 @@ import org.springframework.stereotype.Component;
 
 import java.util.StringJoiner;
 
+/**
+ * 数据采集智能体。
+ * <p>
+ * 负责从比赛实体中采集并整理结构化数据，生成供 AI 模型分析使用的文本摘要。
+ * 数据包括比赛基本信息、比分、球员统计、事件时间线及汇总统计。
+ * 在采集前会从事件重算球员统计和比分，确保数据与事件时间线严格一致。
+ * </p>
+ */
 @Component
 public class DataCollectAgent implements AiAgent {
 
@@ -14,6 +22,16 @@ public class DataCollectAgent implements AiAgent {
         return collect(match);
     }
 
+    /**
+     * 采集比赛数据并生成结构化文本摘要。
+     * <p>
+     * 流程：先重算统计和球员数据，然后按顺序拼接比赛基本信息、
+     * 双方球员数据、事件时间线和汇总统计。
+     * </p>
+     *
+     * @param match 待采集的比赛实体
+     * @return 结构化数据文本
+     */
     public String collect(Match match) {
         // 先重算统计，确保比分和球员数据均来自事件而非持久化旧值
         if (match.getStatistics() != null && match.getHomeTeam() != null && match.getAwayTeam() != null) {
@@ -85,6 +103,13 @@ public class DataCollectAgent implements AiAgent {
         }
     }
 
+    /**
+     * 在比赛的双方队伍中查找指定 ID 的球员。
+     *
+     * @param match    比赛实体
+     * @param playerId 球员 ID
+     * @return 找到的球员对象，未找到返回 null
+     */
     private Player findPlayer(Match match, String playerId) {
         if (match.getHomeTeam() != null) {
             Player p = match.getHomeTeam().findPlayer(playerId);
@@ -96,6 +121,12 @@ public class DataCollectAgent implements AiAgent {
         return null;
     }
 
+    /**
+     * 将指定队伍的所有球员数据追加到文本拼接器中。
+     *
+     * @param sj   文本拼接器
+     * @param team 队伍实体
+     */
     private void appendTeamPlayers(StringJoiner sj, Team team) {
         for (Player p : team.getPlayers()) {
             StringBuilder line = new StringBuilder();

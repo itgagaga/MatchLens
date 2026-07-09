@@ -10,10 +10,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 比赛事件管理接口（录入、查询、修改、删除事件）
+ */
 @RestController
 @RequestMapping("/api")
 public class EventController {
 
+    /** 事件服务，处理比赛事件的录入、查询、修改和删除 */
     private final EventService eventService;
 
     public EventController(EventService eventService) {

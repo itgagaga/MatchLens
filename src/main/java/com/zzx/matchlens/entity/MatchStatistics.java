@@ -5,16 +5,32 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
+/**
+ * 比赛统计数据实体类，聚合一场比赛的实时统计信息。
+ * 包含双方比分、球员统计、球队统计、事件总数、领先方及分差等，
+ * 通过重放比赛事件计算得出，不对应独立数据库表，作为 Match 的嵌套对象使用。
+ */
+@Getter
+@Setter
 public class MatchStatistics {
+    /** 主队得分 */
     @JsonIgnore
     private int homeScore;
+    /** 客队得分 */
     @JsonIgnore
     private int awayScore;
+    /** 球员统计数据，key为球员ID，value为该球员各项统计的键值对 */
     private Map<String, Map<String, Integer>> playerStats = new HashMap<>();
+    /** 球队统计数据，key为"球队名_统计项"，value为统计值 */
     private Map<String, Integer> teamStats = new HashMap<>();
+    /** 事件总数 */
     private int eventCount;
+    /** 当前领先的球队名称 */
     private String leadingTeam;
+    /** 双方分差 */
     private int scoreDifference;
 
     public void updateFromMatch(Match match) {
@@ -134,18 +150,7 @@ public class MatchStatistics {
 
     @JsonProperty("scoreA")
     public int getHomeScore() { return homeScore; }
-    public void setHomeScore(int homeScore) { this.homeScore = homeScore; }
+
     @JsonProperty("scoreB")
     public int getAwayScore() { return awayScore; }
-    public void setAwayScore(int awayScore) { this.awayScore = awayScore; }
-    public Map<String, Map<String, Integer>> getPlayerStats() { return playerStats; }
-    public void setPlayerStats(Map<String, Map<String, Integer>> playerStats) { this.playerStats = playerStats; }
-    public Map<String, Integer> getTeamStats() { return teamStats; }
-    public void setTeamStats(Map<String, Integer> teamStats) { this.teamStats = teamStats; }
-    public int getEventCount() { return eventCount; }
-    public void setEventCount(int eventCount) { this.eventCount = eventCount; }
-    public String getLeadingTeam() { return leadingTeam; }
-    public void setLeadingTeam(String leadingTeam) { this.leadingTeam = leadingTeam; }
-    public int getScoreDifference() { return scoreDifference; }
-    public void setScoreDifference(int scoreDifference) { this.scoreDifference = scoreDifference; }
 }

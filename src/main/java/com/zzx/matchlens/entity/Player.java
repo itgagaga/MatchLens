@@ -3,27 +3,46 @@ package com.zzx.matchlens.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 球员实体类，代表一名参赛球员的基本信息。
+ * 包含球员姓名、所属球队、号码、位置、年龄、身高、体重等，
+ * 同时持有比赛进行时的实时统计数据（内存中维护，不持久化）。
+ * 对应数据库表 t_player。
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @TableName("t_player")
 public class Player {
 
+    /** 球员唯一标识 */
     @TableId
     private String playerId;
+    /** 球员姓名 */
     private String playerName;
+    /** 所属球队ID */
     private String teamId;
+    /** 球衣号码 */
     private int number;
+    /** 场上位置 */
     private String position;
+    /** 年龄 */
     private int age;
+    /** 身高（cm） */
     private int height;
+    /** 体重（kg） */
     private int weight;
 
+    /** 实时统计数据，key为统计项名称，value为统计值（不持久化，仅内存中维护） */
     @TableField(exist = false)
     private Map<String, Integer> statistics = new HashMap<>();
-
-    public Player() {}
 
     public Player(String playerId, String playerName, String teamId, int number) {
         this.playerId = playerId;
@@ -51,23 +70,4 @@ public class Player {
     public int getStat(String key) {
         return statistics.getOrDefault(key, 0);
     }
-
-    public String getPlayerId() { return playerId; }
-    public void setPlayerId(String playerId) { this.playerId = playerId; }
-    public String getPlayerName() { return playerName; }
-    public void setPlayerName(String playerName) { this.playerName = playerName; }
-    public String getTeamId() { return teamId; }
-    public void setTeamId(String teamId) { this.teamId = teamId; }
-    public int getNumber() { return number; }
-    public void setNumber(int number) { this.number = number; }
-    public String getPosition() { return position; }
-    public void setPosition(String position) { this.position = position; }
-    public int getAge() { return age; }
-    public void setAge(int age) { this.age = age; }
-    public int getHeight() { return height; }
-    public void setHeight(int height) { this.height = height; }
-    public int getWeight() { return weight; }
-    public void setWeight(int weight) { this.weight = weight; }
-    public Map<String, Integer> getStatistics() { return statistics; }
-    public void setStatistics(Map<String, Integer> statistics) { this.statistics = statistics; }
 }

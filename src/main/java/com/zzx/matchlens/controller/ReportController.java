@@ -18,17 +18,20 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * 管理端报告生成接口（ADMIN 角色可访问，支持 SSE 流式输出）
+ */
 @RestController
 @RequestMapping("/api/matches/{matchId}")
 public class ReportController {
 
-    private final StatisticsService statisticsService;
-    private final ReportService reportService;
-    private final MatchRepository matchRepository;
-    private final RemoteModelAgent remoteModelAgent;
-    private final DataCollectAgent dataCollectAgent;
-    private final MatchReportService matchReportService;
-    private final ExecutorService executor = Executors.newCachedThreadPool();
+    private final StatisticsService statisticsService;             // 统计服务，提供比赛统计数据和分析文本查询
+    private final ReportService reportService;                     // 报告服务，生成比赛报告文本
+    private final MatchRepository matchRepository;                 // 比赛仓储层，提供比赛实体的数据库访问
+    private final RemoteModelAgent remoteModelAgent;               // 远程 AI 模型智能体，用于 SSE 流式生成报告
+    private final DataCollectAgent dataCollectAgent;               // 数据采集智能体，收集比赛结构化数据供 AI 分析
+    private final MatchReportService matchReportService;           // 报告管理服务，将 AI 生成的报告持久化到数据库
+    private final ExecutorService executor = Executors.newCachedThreadPool(); // 线程池，用于异步执行 SSE 流式 AI 调用
 
     public ReportController(StatisticsService statisticsService,
                             ReportService reportService,
@@ -44,21 +47,33 @@ public class ReportController {
         this.matchReportService = matchReportService;
     }
 
+    /**
+     * 获取比赛统计数据
+     */
     @GetMapping("/statistics")
     public MatchStatistics getStatistics(@PathVariable String matchId) {
         return statisticsService.getStatistics(matchId);
     }
 
+    /**
+     * 获取比赛分析文本
+     */
     @GetMapping("/analysis")
     public String getAnalysis(@PathVariable String matchId) {
         return statisticsService.getAnalysis(matchId);
     }
 
+    /**
+     * 生成比赛报告文本
+     */
     @GetMapping("/report")
     public String generateReport(@PathVariable String matchId) {
         return reportService.generateReport(matchId);
     }
 
+    /**
+     * 流式生成实时态势分析报告（SSE）
+     */
     @GetMapping(value = "/analysis/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamAnalysis(@PathVariable String matchId) {
         SseEmitter emitter = new SseEmitter(120000L);
@@ -112,6 +127,9 @@ public class ReportController {
         return emitter;
     }
 
+    /**
+     * 流式生成赛后复盘报告（SSE）
+     */
     @GetMapping(value = "/report/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamReport(@PathVariable String matchId) {
         SseEmitter emitter = new SseEmitter(120000L);

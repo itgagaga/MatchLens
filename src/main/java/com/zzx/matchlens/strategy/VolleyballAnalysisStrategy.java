@@ -6,6 +6,13 @@ import com.zzx.matchlens.entity.Team;
 
 import java.util.StringJoiner;
 
+/**
+ * 排球分析策略。
+ * <p>
+ * 针对排球赛事的本地态势分析实现，分析维度包括：
+ * 比分与领先、发球得分、拦网统计、失误统计等。
+ * </p>
+ */
 public class VolleyballAnalysisStrategy implements AnalysisStrategy {
 
     @Override
@@ -55,6 +62,13 @@ public class VolleyballAnalysisStrategy implements AnalysisStrategy {
         return sj.toString();
     }
 
+    /**
+     * 计算队伍指定统计项的全员总和。
+     *
+     * @param team    队伍实体
+     * @param statKey 统计项键名
+     * @return 统计值总和
+     */
     private int teamStat(Team team, String statKey) {
         return team.getPlayers().stream()
                 .mapToInt(p -> p.getStat(statKey))

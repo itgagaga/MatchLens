@@ -9,12 +9,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+/**
+ * 排行榜接口（支持单场和全局球员排名）
+ */
 @RestController
 @RequestMapping("/api/rankings")
 public class RankingController {
 
-    private final PlayerStatisticsMapper playerStatisticsMapper;
-    private final PlayerMapper playerMapper;
+    private final PlayerStatisticsMapper playerStatisticsMapper;   // 球员统计 Mapper，提供球员统计表的数据库访问
+    private final PlayerMapper playerMapper;                       // 球员 Mapper，用于查询球员名称填充排行榜
 
     public RankingController(PlayerStatisticsMapper playerStatisticsMapper,
                              PlayerMapper playerMapper) {
@@ -72,6 +75,9 @@ public class RankingController {
         return result;
     }
 
+    /**
+     * 构建单场比赛的球员排行榜数据
+     */
     private List<Map<String, Object>> buildRanking(List<PlayerStatistics> stats, int limit) {
         // 按 playerId 汇总（同一场比赛同一球员可能有多条同类型统计）
         Map<String, Integer> aggregated = new LinkedHashMap<>();
@@ -94,6 +100,9 @@ public class RankingController {
         return result;
     }
 
+    /**
+     * 填充排行榜中球员的名称信息
+     */
     private void fillPlayerNames(List<Map<String, Object>> result) {
         for (Map<String, Object> item : result) {
             String playerId = (String) item.get("playerId");

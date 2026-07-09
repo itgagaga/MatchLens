@@ -10,42 +10,66 @@ import com.zzx.matchlens.state.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 比赛实体类，代表一场体育赛事的完整信息。
+ * 包含比赛名称、运动类型、参赛队伍、比赛状态及关联的事件和统计数据。
+ * 采用状态模式（MatchState）管理比赛生命周期（未开始→进行中→暂停→结束），
+ * 通过状态转换控制比赛流程中各操作的合法性校验。
+ * 对应数据库表 t_match。
+ */
+@Getter
+@Setter
+@NoArgsConstructor
 @TableName("t_match")
 public class Match {
 
+    /** 比赛唯一标识 */
     @TableId
     private String matchId;
+    /** 比赛名称 */
     private String matchName;
+    /** 运动类型（如篮球、足球等） */
     private SportType sportType;
+    /** 比赛状态（未开始/进行中/暂停/结束） */
     private MatchStatus status;
+    /** 主队ID */
     private String homeTeamId;
+    /** 客队ID */
     private String awayTeamId;
+    /** 比赛创建时间 */
     private LocalDateTime createTime;
+    /** 比赛信息最后更新时间 */
     private LocalDateTime updateTime;
 
+    /** 比赛状态对象（状态模式，不持久化） */
     @TableField(exist = false)
     private transient MatchState state = new NotStartedState();
 
+    /** 主队信息（不持久化，通过关联查询加载） */
     @TableField(exist = false)
     @JsonIgnore
     private Team homeTeam;
 
+    /** 客队信息（不持久化，通过关联查询加载） */
     @TableField(exist = false)
     @JsonIgnore
     private Team awayTeam;
 
+    /** 比赛事件列表（不持久化，通过关联查询加载） */
     @TableField(exist = false)
     private List<MatchEvent> events = new ArrayList<>();
 
+    /** 比赛统计数据（不持久化，通过事件重放计算得出） */
     @TableField(exist = false)
     private MatchStatistics statistics = new MatchStatistics();
-
-    public Match() {}
 
     public Match(String matchId, String matchName, SportType sportType) {
         this.matchId = matchId;
@@ -116,22 +140,6 @@ public class Match {
 
     @JsonIgnore
     public MatchState getState() { return state; }
-    public void setState(MatchState state) { this.state = state; }
-
-    public String getMatchId() { return matchId; }
-    public void setMatchId(String matchId) { this.matchId = matchId; }
-    public String getMatchName() { return matchName; }
-    public void setMatchName(String matchName) { this.matchName = matchName; }
-    public SportType getSportType() { return sportType; }
-    public void setSportType(SportType sportType) { this.sportType = sportType; }
-    public String getHomeTeamId() { return homeTeamId; }
-    public void setHomeTeamId(String homeTeamId) { this.homeTeamId = homeTeamId; }
-    public String getAwayTeamId() { return awayTeamId; }
-    public void setAwayTeamId(String awayTeamId) { this.awayTeamId = awayTeamId; }
-    public LocalDateTime getCreateTime() { return createTime; }
-    public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
-    public LocalDateTime getUpdateTime() { return updateTime; }
-    public void setUpdateTime(LocalDateTime updateTime) { this.updateTime = updateTime; }
 
     @JsonProperty("teamA")
     public Team getHomeTeam() { return homeTeam; }
@@ -139,6 +147,7 @@ public class Match {
         this.homeTeam = homeTeam;
         if (homeTeam != null) this.homeTeamId = homeTeam.getTeamId();
     }
+
     @JsonProperty("teamB")
     public Team getAwayTeam() { return awayTeam; }
     public void setAwayTeam(Team awayTeam) {
@@ -151,8 +160,4 @@ public class Match {
         this.status = status;
         syncState();
     }
-    public List<MatchEvent> getEvents() { return events; }
-    public void setEvents(List<MatchEvent> events) { this.events = events; }
-    public MatchStatistics getStatistics() { return statistics; }
-    public void setStatistics(MatchStatistics statistics) { this.statistics = statistics; }
 }

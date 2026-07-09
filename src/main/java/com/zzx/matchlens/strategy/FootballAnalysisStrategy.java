@@ -6,6 +6,13 @@ import com.zzx.matchlens.entity.Team;
 
 import java.util.StringJoiner;
 
+/**
+ * 足球分析策略。
+ * <p>
+ * 针对足球赛事的本地态势分析实现，分析维度包括：
+ * 比分与领先、红黄牌统计、犯规统计等。
+ * </p>
+ */
 public class FootballAnalysisStrategy implements AnalysisStrategy {
 
     @Override
@@ -52,6 +59,13 @@ public class FootballAnalysisStrategy implements AnalysisStrategy {
         return sj.toString();
     }
 
+    /**
+     * 计算队伍指定统计项的全员总和。
+     *
+     * @param team    队伍实体
+     * @param statKey 统计项键名
+     * @return 统计值总和
+     */
     private int teamStat(Team team, String statKey) {
         return team.getPlayers().stream()
                 .mapToInt(p -> p.getStat(statKey))

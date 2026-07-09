@@ -5,6 +5,13 @@ import com.zzx.matchlens.entity.Team;
 
 import java.util.StringJoiner;
 
+/**
+ * 通用赛事分析策略。
+ * <p>
+ * 适用于未指定具体运动类型的通用赛事，提供最基础的态势分析：
+ * 比分、领先方和已记录事件数。不包含运动特定规则的分析。
+ * </p>
+ */
 public class GeneralAnalysisStrategy implements AnalysisStrategy {
 
     @Override

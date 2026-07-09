@@ -10,6 +10,15 @@ import reactor.core.publisher.Flux;
 import java.time.LocalDateTime;
 import java.util.function.Consumer;
 
+/**
+ * 远程 AI 模型智能体。
+ * <p>
+ * 通过 Spring AI ChatClient 调用远程大语言模型，支持同步调用（带重试）和
+ * SSE 流式输出两种模式。还记录每次调用的日志，并在 API Key 未配置时提前失败。
+ * 是所有依赖远程 AI 的上层 Agent（如 {@link ReviewReportAgent}、
+ * {@link SituationAnalysisAgent}）的核心调用引擎。
+ * </p>
+ */
 @Component
 public class RemoteModelAgent implements AiAgent {
 
@@ -20,6 +29,7 @@ public class RemoteModelAgent implements AiAgent {
     @Value("${spring.ai.openai.api-key:}")
     private String apiKey;
 
+    /** 最大重试次数，默认 2 次 */
     @Value("${ai.max-retries:2}")
     private int maxRetries;
 
@@ -27,6 +37,13 @@ public class RemoteModelAgent implements AiAgent {
     private final AiCallLogService aiCallLogService;
     private final ChatClient chatClient;
 
+    /**
+     * 构造方法，注入依赖并构建 ChatClient 实例。
+     *
+     * @param dataCollectAgent 数据采集 Agent，用于获取比赛结构化数据
+     * @param aiCallLogService AI 调用日志服务
+     * @param chatClientBuilder Spring AI ChatClient 构建器
+     */
     public RemoteModelAgent(DataCollectAgent dataCollectAgent,
                             AiCallLogService aiCallLogService,
                             ChatClient.Builder chatClientBuilder) {
@@ -182,6 +199,12 @@ public class RemoteModelAgent implements AiAgent {
         return AiAgentResponse.failure(errorMsg, System.currentTimeMillis() - start, agentType, "N/A");
     }
 
+    /**
+     * 记录 AI 调用响应日志。
+     *
+     * @param response AI 响应对象
+     * @param prompt   发送的完整提示词
+     */
     private void logResponse(AiAgentResponse response, String prompt) {
         try {
             aiCallLogService.log(response, prompt);
@@ -190,6 +213,15 @@ public class RemoteModelAgent implements AiAgent {
         }
     }
 
+    /**
+     * 校验 AI 返回内容是否有效。
+     * <p>
+     * 排除空内容以及包含常见错误关键词的短文本（可能是 API 错误响应）。
+     * </p>
+     *
+     * @param content AI 返回的文本内容
+     * @return 内容有效返回 true
+     */
     private boolean isContentValid(String content) {
         if (content == null || content.trim().isEmpty()) return false;
         String[] errorIndicators = {"错误", "error", "Error", "失败", "无法", "API", "api key"};
@@ -199,12 +231,23 @@ public class RemoteModelAgent implements AiAgent {
         return true;
     }
 
+    /**
+     * 构建默认的系统提示词，定义 AI 的赛后分析师角色和报告结构。
+     *
+     * @return 系统提示词字符串
+     */
     private String buildDefaultSystemPrompt() {
         return "你是一名专业的体育赛事分析师。请根据提供的比赛数据，生成一份详细的赛后复盘报告。"
                 + "报告应包含：1）比赛结果概述 2）关键球员表现分析 3）关键事件回顾 "
                 + "4）胜负原因深度分析 5）针对性改进建议。请使用专业但易懂的中文分析。";
     }
 
+    /**
+     * 构建用户提示词，包含比赛的详细结构化数据。
+     *
+     * @param match 比赛实体
+     * @return 用户提示词字符串
+     */
     private String buildUserPrompt(Match match) {
         String matchData = dataCollectAgent.collect(match);
         StringBuilder sb = new StringBuilder();

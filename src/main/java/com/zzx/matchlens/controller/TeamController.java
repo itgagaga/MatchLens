@@ -11,23 +11,32 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * 管理端球队管理接口（ADMIN 角色可访问）
+ */
 @RestController
 @RequestMapping("/api/teams")
 public class TeamController {
 
-    private final TeamMapper teamMapper;
-    private final PlayerMapper playerMapper;
+    private final TeamMapper teamMapper;       // 球队 Mapper，提供球队表的 CRUD 操作
+    private final PlayerMapper playerMapper;   // 球员 Mapper，用于查询球队下属球员和删除前校验
 
     public TeamController(TeamMapper teamMapper, PlayerMapper playerMapper) {
         this.teamMapper = teamMapper;
         this.playerMapper = playerMapper;
     }
 
+    /**
+     * 获取所有球队列表
+     */
     @GetMapping
     public List<Team> getAllTeams() {
         return teamMapper.selectList(null);
     }
 
+    /**
+     * 获取单个球队详情
+     */
     @GetMapping("/{teamId}")
     public Team getTeam(@PathVariable String teamId) {
         Team team = teamMapper.selectById(teamId);
@@ -37,6 +46,9 @@ public class TeamController {
         return team;
     }
 
+    /**
+     * 创建新球队
+     */
     @PostMapping
     public Result<String> createTeam(@RequestBody Team team) {
         if (team.getTeamName() == null || team.getTeamName().trim().isEmpty()) {
@@ -50,6 +62,9 @@ public class TeamController {
         return Result.ok("球队创建成功", team.getTeamId());
     }
 
+    /**
+     * 更新球队信息
+     */
     @PutMapping("/{teamId}")
     public Result<String> updateTeam(@PathVariable String teamId, @RequestBody Team team) {
         Team existing = teamMapper.selectById(teamId);
@@ -66,6 +81,9 @@ public class TeamController {
         return Result.ok("球队信息更新成功");
     }
 
+    /**
+     * 删除球队（球队下无球员时才可删除）
+     */
     @DeleteMapping("/{teamId}")
     public Result<String> deleteTeam(@PathVariable String teamId) {
         Team team = teamMapper.selectById(teamId);
@@ -81,6 +99,9 @@ public class TeamController {
         return Result.ok("球队删除成功");
     }
 
+    /**
+     * 获取指定球队的球员列表
+     */
     @GetMapping("/{teamId}/players")
     public List<Player> getTeamPlayers(@PathVariable String teamId) {
         return playerMapper.selectList(

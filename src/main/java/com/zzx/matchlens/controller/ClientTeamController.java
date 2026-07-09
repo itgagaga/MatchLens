@@ -22,9 +22,9 @@ import java.util.Map;
 @RequestMapping("/api/client/teams")
 public class ClientTeamController {
 
-    private final TeamMapper teamMapper;
-    private final PlayerMapper playerMapper;
-    private final MatchEventMapper matchEventMapper;
+    private final TeamMapper teamMapper;                   // 球队 Mapper，提供球队表的数据库访问
+    private final PlayerMapper playerMapper;               // 球员 Mapper，提供球员表的数据库访问
+    private final MatchEventMapper matchEventMapper;       // 事件 Mapper，用于从事件重算球员统计
 
     public ClientTeamController(TeamMapper teamMapper, PlayerMapper playerMapper, MatchEventMapper matchEventMapper) {
         this.teamMapper = teamMapper;

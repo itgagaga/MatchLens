@@ -7,6 +7,14 @@ import org.springframework.stereotype.Component;
 import java.util.Comparator;
 import java.util.StringJoiner;
 
+/**
+ * 本地规则智能体。
+ * <p>
+ * 当远程 AI 模型不可用时，作为降级方案使用本地规则模板生成赛后复盘报告。
+ * 基于预设的规则和阈值，分析比赛结果、关键球员、事件统计、
+ * 胜负原因并给出改进建议。生成的报告格式固定但无需依赖外部服务。
+ * </p>
+ */
 @Component
 public class LocalRuleAgent implements AiAgent {
 
@@ -15,6 +23,16 @@ public class LocalRuleAgent implements AiAgent {
         return generateReview(match);
     }
 
+    /**
+     * 基于本地规则模板生成赛后复盘报告。
+     * <p>
+     * 报告包含：比赛结果、关键球员表现、关键事件回顾、
+     * 胜负原因分析和改进建议。
+     * </p>
+     *
+     * @param match 待分析的比赛实体
+     * @return 规则模板生成的复盘报告文本
+     */
     public String generateReview(Match match) {
         Team home = match.getHomeTeam();
         Team away = match.getAwayTeam();
@@ -80,6 +98,12 @@ public class LocalRuleAgent implements AiAgent {
         return sj.toString();
     }
 
+    /**
+     * 追加队伍的最佳射手信息到文本拼接器。
+     *
+     * @param sj   文本拼接器
+     * @param team 队伍实体
+     */
     private void appendTopScorer(StringJoiner sj, Team team) {
         team.getPlayers().stream()
                 .max(Comparator.comparingInt(p -> p.getStat("SCORE")))
@@ -89,12 +113,26 @@ public class LocalRuleAgent implements AiAgent {
                         p.getStat("SCORE"))));
     }
 
+    /**
+     * 计算队伍的全员犯规总数。
+     *
+     * @param team 队伍实体
+     * @return 犯规总次数
+     */
     private int teamFouls(Team team) {
         return team.getPlayers().stream()
                 .mapToInt(p -> p.getStat(EventType.FOUL.name()))
                 .sum();
     }
 
+    /**
+     * 根据比赛情况追加针对性的改进建议。
+     *
+     * @param sj     文本拼接器
+     * @param home   甲方队伍
+     * @param away   乙方队伍
+     * @param winner 获胜方队名，平局时为 null
+     */
     private void appendSuggestions(StringJoiner sj, Team home, Team away, String winner) {
         int homeFouls = teamFouls(home);
         int awayFouls = teamFouls(away);

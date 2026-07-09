@@ -8,6 +8,13 @@ import com.zzx.matchlens.entity.Team;
 import java.util.Comparator;
 import java.util.StringJoiner;
 
+/**
+ * 篮球分析策略。
+ * <p>
+ * 针对篮球赛事的本地态势分析实现，分析维度包括：
+ * 比分与分差、连续得分势头、犯规统计、关键球员表现等。
+ * </p>
+ */
 public class BasketballAnalysisStrategy implements AnalysisStrategy {
 
     @Override
@@ -58,6 +65,12 @@ public class BasketballAnalysisStrategy implements AnalysisStrategy {
         return sj.toString();
     }
 
+    /**
+     * 分析最近连续得分情况，若同一队伍连续得分 3 次及以上则提示势头强劲。
+     *
+     * @param match 比赛实体
+     * @param sj    文本拼接器
+     */
     private void analyzeConsecutive(Match match, StringJoiner sj) {
         var events = match.getEvents();
         if (events.size() < 3) return;
@@ -83,12 +96,25 @@ public class BasketballAnalysisStrategy implements AnalysisStrategy {
         }
     }
 
+    /**
+     * 计算队伍指定统计项的全员总和。
+     *
+     * @param team    队伍实体
+     * @param statKey 统计项键名
+     * @return 统计值总和
+     */
     private int teamStat(Team team, String statKey) {
         return team.getPlayers().stream()
                 .mapToInt(p -> p.getStat(statKey))
                 .sum();
     }
 
+    /**
+     * 在双方队伍中查找得分最高的球员。
+     *
+     * @param match 比赛实体
+     * @return 得分最高的球员，无得分者时返回 null
+     */
     private Player findTopScorer(Match match) {
         java.util.List<Player> allPlayers = new java.util.ArrayList<>();
         allPlayers.addAll(match.getHomeTeam().getPlayers());

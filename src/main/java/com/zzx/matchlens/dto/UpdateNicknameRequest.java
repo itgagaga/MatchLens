@@ -1,10 +1,10 @@
 package com.zzx.matchlens.dto;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
 public class UpdateNicknameRequest {
     private String nickname;
-
-    public UpdateNicknameRequest() {}
-
-    public String getNickname() { return nickname; }
-    public void setNickname(String nickname) { this.nickname = nickname; }
 }
