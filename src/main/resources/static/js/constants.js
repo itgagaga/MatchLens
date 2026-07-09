@@ -38,3 +38,11 @@ const STAT_KEY = {
 };
 
 const POSITION_OPTIONS = ['PG', 'SG', 'SF', 'PF', 'C', 'GK', 'DEF', 'MID', 'FWD', '自由人', '二传', '主攻', '副攻', '接应'];
+
+// 各运动类别对应的事件类型
+const EVENT_TYPES_BY_SPORT = {
+  BASKETBALL: ['SCORE', 'FOUL', 'ASSIST', 'REBOUND', 'STEAL', 'TURNOVER', 'TIMEOUT'],
+  FOOTBALL: ['SCORE', 'FOUL', 'YELLOW_CARD', 'RED_CARD'],
+  VOLLEYBALL: ['SCORE', 'BLOCK', 'SERVE_ACE', 'ERROR'],
+  GENERAL: ['SCORE', 'FOUL']
+};

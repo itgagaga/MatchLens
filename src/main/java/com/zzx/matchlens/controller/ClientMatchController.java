@@ -9,10 +9,7 @@ import com.zzx.matchlens.common.Result;
 import com.zzx.matchlens.common.SportType;
 import com.zzx.matchlens.dto.RecommendMatchRequest;
 import com.zzx.matchlens.dto.MatchReportVO;
-import com.zzx.matchlens.entity.Match;
-import com.zzx.matchlens.entity.MatchEvent;
-import com.zzx.matchlens.entity.MatchStatistics;
-import com.zzx.matchlens.entity.QaMessage;
+import com.zzx.matchlens.entity.*;
 import com.zzx.matchlens.repository.MatchRepository;
 import com.zzx.matchlens.service.EventService;
 import com.zzx.matchlens.service.MatchReportService;
@@ -138,8 +135,13 @@ public class ClientMatchController {
         // 构建比赛数据摘要供 AI 分析
         String matchSummary = buildMatchSummary(all);
 
-        String systemPrompt = "你是 MatchLens 智能赛事推荐助手。用户会描述他们想看的比赛类型，"
+        String systemPrompt = "你是 MatchLens 智能赛事推荐助手。用户会描述他们想看的比赛类型、偏好球员或比赛风格，"
                 + "你需要从给定的比赛列表中选出最符合用户偏好的比赛（最多推荐5场），并说明推荐理由。\n\n"
+                + "推荐时可参考以下维度：\n"
+                + "- 比赛类型（篮球/足球/排球等）\n"
+                + "- 比赛状态（进行中、已结束等）\n"
+                + "- 比分差距与竞争激烈程度\n"
+                + "- 特定球员的表现数据（得分、助攻、篮板等）\n\n"
                 + "请严格按照以下 JSON 格式返回结果，不要包含其他内容：\n"
                 + "```json\n"
                 + "[\n"
@@ -369,12 +371,40 @@ public class ClientMatchController {
                     sb.append("  领先方: ").append(stats.getLeadingTeam()).append("\n");
                 }
                 sb.append("  事件数: ").append(stats.getEventCount()).append("\n");
+
+                // 追加球员数据
+                appendTeamPlayers(sb, "  甲方球员", m.getHomeTeam());
+                appendTeamPlayers(sb, "  乙方球员", m.getAwayTeam());
             } else {
                 sb.append("  队伍: 未设置\n");
             }
             sb.append("\n");
         }
         return sb.toString();
+    }
+
+    /**
+     * 追加球队球员及其核心数据
+     */
+    private void appendTeamPlayers(StringBuilder sb, String label, Team team) {
+        if (team == null || team.getPlayers() == null || team.getPlayers().isEmpty()) return;
+        sb.append(label).append(":\n");
+        for (Player p : team.getPlayers()) {
+            sb.append("    - ").append(p.getPlayerName());
+            if (p.getNumber() > 0) sb.append(" (#").append(p.getNumber()).append(")");
+            Map<String, Integer> stats = p.getStatistics();
+            if (stats != null && !stats.isEmpty()) {
+                sb.append(" [");
+                boolean first = true;
+                for (Map.Entry<String, Integer> entry : stats.entrySet()) {
+                    if (!first) sb.append(", ");
+                    sb.append(entry.getKey()).append(":").append(entry.getValue());
+                    first = false;
+                }
+                sb.append("]");
+            }
+            sb.append("\n");
+        }
     }
 
     /**

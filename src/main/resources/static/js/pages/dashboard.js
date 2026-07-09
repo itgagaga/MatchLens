@@ -35,7 +35,7 @@
         <div class="summary-card"><div class="num">${data.aiCallCount ?? 0}</div><div class="label">AI 调用总数</div></div>
         <div class="summary-card"><div class="num">${data.aiSuccessCount ?? 0}</div><div class="label">成功次数</div></div>
         <div class="summary-card"><div class="num">${data.aiFailCount ?? 0}</div><div class="label">失败次数</div></div>
-        <div class="summary-card"><div class="num">${data.aiSuccessRate != null ? (data.aiSuccessRate * 100).toFixed(1) + '%' : '-'}</div><div class="label">成功率</div></div>
+        <div class="summary-card"><div class="num">${data.aiSuccessRate != null ? data.aiSuccessRate.toFixed(1) + '%' : '-'}</div><div class="label">成功率</div></div>
       </div>
     `;
   }

@@ -25,6 +25,7 @@ const MatchDetailPage = {
       this.renderScoreBoard();
       this.renderMatchInfo();
       this.renderTeamSelect();
+      this.renderEventTypeSelect();
     } catch (e) {
       Common.toast('加载比赛失败');
     }
@@ -71,6 +72,19 @@ const MatchDetailPage = {
     document.getElementById('eventPlayer').innerHTML = '<option value="">-- 请先选择队伍 --</option>';
   },
 
+  renderEventTypeSelect() {
+    const sportType = this.match.sportType || 'GENERAL';
+    const allowedTypes = EVENT_TYPES_BY_SPORT[sportType] || EVENT_TYPES_BY_SPORT['GENERAL'];
+    const eventTypeSelect = document.getElementById('eventType');
+    let html = '<option value="">-- 请选择事件类型 --</option>';
+    allowedTypes.forEach(type => {
+      const info = EVENT_TYPE[type];
+      const label = info ? info.label : type;
+      html += `<option value="${type}">${label}</option>`;
+    });
+    eventTypeSelect.innerHTML = html;
+  },
+
   onTeamChange() {
     const teamId = document.getElementById('eventTeam').value;
     const playerSelect = document.getElementById('eventPlayer');
@@ -98,6 +112,7 @@ const MatchDetailPage = {
     const description = document.getElementById('eventDescription').value.trim();
     if (!teamId) { Common.toast('请选择队伍'); return; }
     if (!playerId) { Common.toast('请选择球员'); return; }
+    if (!eventType) { Common.toast('请选择事件类型'); return; }
     try {
       await API.recordEvent(this.matchId, { teamId, playerId, eventType, scoreValue, description });
       Common.toast('事件录入成功');

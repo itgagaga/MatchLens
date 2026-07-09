@@ -111,7 +111,7 @@ public class MatchRepository {
     }
 
     /**
-     * 查询所有比赛（含队伍信息和事件，不含球员）
+     * 查询所有比赛（含队伍信息、事件和球员列表）
      */
     public List<Match> findAll() {
         List<Match> matches = matchMapper.selectList(null);
@@ -119,10 +119,16 @@ public class MatchRepository {
             match.syncState();
             if (match.getHomeTeamId() != null) {
                 Team homeTeam = teamMapper.selectById(match.getHomeTeamId());
+                if (homeTeam != null) {
+                    homeTeam.setPlayers(loadPlayers(homeTeam.getTeamId()));
+                }
                 match.setHomeTeam(homeTeam);
             }
             if (match.getAwayTeamId() != null) {
                 Team awayTeam = teamMapper.selectById(match.getAwayTeamId());
+                if (awayTeam != null) {
+                    awayTeam.setPlayers(loadPlayers(awayTeam.getTeamId()));
+                }
                 match.setAwayTeam(awayTeam);
             }
             // 加载事件列表，以便计算比分统计
