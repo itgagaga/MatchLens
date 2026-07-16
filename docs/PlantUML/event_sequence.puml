@@ -1,0 +1,65 @@
+@startuml event_sequence
+skinparam sequenceMessageAlign center
+skinparam sequenceFontSize 13
+
+actor "管理员" as Admin
+participant "EventController" as EC
+participant "EventService" as ES
+participant "EventCheckChain" as Chain
+participant "BasicEventCheck\nHandler" as Basic
+participant "StateCheck\nHandler" as State
+participant "PlayerCheck\nHandler" as Player
+participant "EventTypeCheck\nHandler" as EType
+participant "ScoreCheck\nHandler" as Score
+participant "MatchEventMapper" as MEM
+participant "MatchEventPublisher" as Pub
+participant "ScoreBoard\nObserver" as SBO
+participant "Statistics\nObserver" as SO
+participant "RiskWarning\nObserver" as RWO
+participant "ReportObserver" as RO
+
+Admin -> EC: POST /api/events\n(录入事件)
+EC -> ES: recordEvent(matchId, teamId,\nplayerId, eventType, scoreValue)
+
+ES -> Chain: execute(match, event)
+
+Chain -> Basic: handle(match, event)
+Basic -> Basic: check() 校验基础数据
+Basic -> State: handle(match, event)
+State -> State: check() 校验比赛状态
+State -> Player: handle(match, event)
+Player -> Player: check() 校验球员合法性
+Player -> EType: handle(match, event)
+EType -> EType: check() 校验事件类型
+EType -> Score: handle(match, event)
+Score -> Score: check() 校验得分值
+Score --> Chain: 校验通过
+
+alt 校验失败
+    Chain --> ES: Result.fail("错误信息")
+    ES --> EC: 返回失败
+    EC --> Admin: 显示错误信息
+else 校验通过
+    ES -> MEM: insert(event)
+    MEM --> ES: 保存成功
+
+    ES -> Pub: publish(match, event)
+
+    Pub -> SBO: onEventAdded(match, event)\n@Order(1)
+    SBO -> SBO: 更新比分
+
+    Pub -> SO: onEventAdded(match, event)\n@Order(2)
+    SO -> SO: 重算统计数据
+
+    Pub -> RWO: onEventAdded(match, event)\n@Order(3)
+    RWO -> RWO: 检测犯规/分差异常
+
+    Pub -> RO: onEventAdded(match, event)\n@Order(4)
+    RO -> RO: 记录事件日志
+
+    Pub --> ES: 通知完成
+
+    ES --> EC: Result.ok("事件录入成功")
+    EC --> Admin: 显示成功 + 更新界面
+end
+@enduml

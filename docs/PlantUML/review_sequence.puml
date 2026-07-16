@@ -1,0 +1,59 @@
+@startuml review_sequence
+skinparam sequenceMessageAlign center
+skinparam sequenceFontSize 13
+
+actor "管理员" as Admin
+participant "MatchController" as MC
+participant "MatchService" as MS
+participant "MatchState\n(FinishedState)" as FS
+participant "ReportService" as RS
+participant "ReviewReportAgent" as RRA
+participant "DataCollectAgent" as DCA
+participant "RemoteModelAgent" as RMA
+participant "ChatClient\n(Spring AI)" as CC
+participant "DeepSeek API" as DS
+participant "LocalRuleAgent" as LRA
+participant "MatchReportService" as MRS
+participant "MatchReportMapper" as MRM
+
+Admin -> MC: POST /api/matches/{id}/finish\n(结束比赛)
+MC -> MS: finishMatch(matchId)
+
+MS -> MS: loadMatch(matchId)
+MS -> FS: finish(match)
+FS -> FS: setStatus(FINISHED)
+FS --> MS: Result.ok("比赛已结束")
+
+MS -> RS: generateReport(matchId)
+RS -> RRA: execute(match)
+
+RRA -> DCA: collect(match)
+DCA -> DCA: rebuildPlayerStatsFromEvents()
+DCA -> DCA: 拼接结构化数据
+DCA --> RRA: 返回数据摘要
+
+RRA -> RMA: callWithPrompt(match, REVIEW_REPORT,\nsystemPrompt, userPrompt)
+RMA -> CC: prompt().system().user().call().content()
+CC -> DS: HTTP POST 同步请求
+DS --> CC: AI 生成的复盘报告
+CC --> RMA: 返回文本内容
+
+alt 远程AI调用成功
+    RMA --> RRA: AiAgentResponse(success, content)
+    RRA --> RS: 返回AI生成的复盘报告
+else 远程AI调用失败 (重试后仍失败)
+    RMA --> RRA: AiAgentResponse(failure, errorMsg)
+    RRA -> LRA: execute(match)
+    LRA -> LRA: generateReview(match)\n本地规则模板生成
+    LRA --> RRA: 返回模板复盘报告
+    RRA --> RS: 返回本地规则报告
+end
+
+RS -> MRS: saveOrUpdate(matchId, reportType, content)
+MRS -> MRM: insert/update 报告记录
+MRM --> MRS: 保存成功
+MRS --> RS: 保存完成
+
+RS --> MC: 报告生成完毕
+MC --> Admin: 展示赛后复盘报告
+@enduml

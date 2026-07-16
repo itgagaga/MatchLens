@@ -1,0 +1,68 @@
+@startuml chain_class_diagram
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+
+abstract class EventCheckHandler {
+    -next: EventCheckHandler
+    +setNext(EventCheckHandler): EventCheckHandler
+    +handle(Match, MatchEvent): Result<String>
+    #check(Match, MatchEvent): Result<String>
+}
+
+class BasicEventCheckHandler {
+    #check(Match, MatchEvent): Result<String>
+}
+note right of BasicEventCheckHandler
+  校验基础数据完整性
+  (matchId, teamId, playerId, eventType 非空)
+end note
+
+class StateCheckHandler {
+    #check(Match, MatchEvent): Result<String>
+}
+note right of StateCheckHandler
+  校验比赛状态是否允许录入事件
+  (仅 RUNNING 状态允许)
+end note
+
+class PlayerCheckHandler {
+    #check(Match, MatchEvent): Result<String>
+}
+note right of PlayerCheckHandler
+  校验球员是否属于参赛队伍
+end note
+
+class EventTypeCheckHandler {
+    #check(Match, MatchEvent): Result<String>
+}
+note right of EventTypeCheckHandler
+  校验事件类型是否适配当前赛事类型
+end note
+
+class ScoreCheckHandler {
+    #check(Match, MatchEvent): Result<String>
+}
+note right of ScoreCheckHandler
+  校验得分值是否合法
+  (篮球: 1/2/3 分)
+end note
+
+class EventCheckChain {
+    -head: EventCheckHandler
+    +execute(Match, MatchEvent): Result<String>
+}
+note right of EventCheckChain
+  构造方法中组装校验链:
+  Basic → State → Player
+  → EventType → Score
+end note
+
+EventCheckHandler <|-- BasicEventCheckHandler
+EventCheckHandler <|-- StateCheckHandler
+EventCheckHandler <|-- PlayerCheckHandler
+EventCheckHandler <|-- EventTypeCheckHandler
+EventCheckHandler <|-- ScoreCheckHandler
+
+EventCheckChain --> EventCheckHandler : head
+EventCheckHandler --> EventCheckHandler : next
+@enduml

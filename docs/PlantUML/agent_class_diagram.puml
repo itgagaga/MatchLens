@@ -1,0 +1,117 @@
+@startuml agent_class_diagram
+skinparam classAttributeIconSize 0
+skinparam classFontSize 13
+
+interface AiAgent {
+    +execute(Match): String
+}
+
+class DataCollectAgent {
+    +execute(Match): String
+    +collect(Match): String
+    -rebuildPlayerStatsFromEvents(Match): void
+    -findPlayer(Match, String): Player
+    -appendTeamPlayers(StringJoiner, Team): void
+}
+note right of DataCollectAgent
+  数据采集Agent
+  从 Match 采集结构化数据
+  采集前从事件重算比分和统计
+end note
+
+class RemoteModelAgent {
+    -apiKey: String
+    -maxRetries: int
+    -dataCollectAgent: DataCollectAgent
+    -aiCallLogService: AiCallLogService
+    -chatClient: ChatClient
+    +execute(Match): String
+    +callWithPrompt(Match, AiAgentType, String, String): AiAgentResponse
+    +streamChat(Match, String, String, AiAgentType, Consumer<String>): AiAgentResponse
+    +callGeneric(String, String, AiAgentType): AiAgentResponse
+    -isContentValid(String): boolean
+    -logResponse(AiAgentResponse, String): void
+}
+note right of RemoteModelAgent
+  远程模型Agent
+  通过 Spring AI ChatClient
+  调用 DeepSeek API
+  支持同步调用和SSE流式输出
+end note
+
+class LocalRuleAgent {
+    +execute(Match): String
+    +generateReview(Match): String
+    -appendTopScorer(StringJoiner, Team): void
+    -teamFouls(Team): int
+    -appendSuggestions(StringJoiner, Team, Team, String): void
+}
+note right of LocalRuleAgent
+  本地规则Agent
+  远程AI不可用时的降级方案
+  使用模板生成复盘报告
+end note
+
+class SituationAnalysisAgent {
+    -dataCollectAgent: DataCollectAgent
+    -remoteModelAgent: RemoteModelAgent
+    +execute(Match): String
+    +analyze(Match): String
+    -buildSystemPrompt(Match): String
+}
+note right of SituationAnalysisAgent
+  态势分析Agent
+  优先远程AI，失败降级到策略模式
+end note
+
+class ReviewReportAgent {
+    -dataCollectAgent: DataCollectAgent
+    -remoteModelAgent: RemoteModelAgent
+    -localRuleAgent: LocalRuleAgent
+    +execute(Match): String
+    +generateReview(Match): String
+    -buildSystemPrompt(Match): String
+}
+note right of ReviewReportAgent
+  复盘报告Agent
+  优先远程AI，失败降级到LocalRuleAgent
+end note
+
+class AiAgentRequest {
+    -match: Match
+    -agentType: AiAgentType
+    -customSystemPrompt: String
+}
+
+class AiAgentResponse {
+    -success: boolean
+    -content: String
+    -errorMessage: String
+    -responseTimeMs: long
+    -agentType: AiAgentType
+    -matchId: String
+    +{static} success(...): AiAgentResponse
+    +{static} failure(...): AiAgentResponse
+}
+
+enum AiAgentType {
+    SITUATION_ANALYSIS
+    REVIEW_REPORT
+    MATCH_RECOMMENDATION
+    MATCH_QA
+}
+
+AiAgent <|.. DataCollectAgent
+AiAgent <|.. RemoteModelAgent
+AiAgent <|.. LocalRuleAgent
+AiAgent <|.. SituationAnalysisAgent
+AiAgent <|.. ReviewReportAgent
+
+SituationAnalysisAgent --> DataCollectAgent : 数据采集
+SituationAnalysisAgent --> RemoteModelAgent : 远程AI调用
+ReviewReportAgent --> DataCollectAgent : 数据采集
+ReviewReportAgent --> RemoteModelAgent : 远程AI调用
+ReviewReportAgent --> LocalRuleAgent : 降级方案
+RemoteModelAgent --> DataCollectAgent : 数据获取
+RemoteModelAgent --> AiAgentResponse : 返回
+@enduml

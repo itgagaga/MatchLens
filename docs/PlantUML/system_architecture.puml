@@ -1,0 +1,103 @@
+@startuml system_architecture
+skinparam componentFontSize 14
+skinparam packageFontSize 14
+
+package "表现层 (Controller + 静态页面)" {
+    [AuthController] as AC
+    [MatchController] as MC
+    [EventController] as EC
+    [ReportController] as RC
+    [PlayerController] as PC
+    [TeamController] as TC
+    [DashboardController] as DC
+    [RankingController] as RKC
+    [ClientMatchController] as CMC
+    [ClientTeamController] as CTC
+    [MatchReportController] as MRC
+    [HTML/CSS/JS 前端页面] as FE
+}
+
+package "业务服务层 (Service)" {
+    [MatchService] as MS
+    [EventService] as ES
+    [StatisticsService] as SS
+    [ReportService] as RS
+    [DashboardService] as DS
+    [PlayerService] as PS
+    [UserService] as US
+    [QaMessageService] as QMS
+    [StatisticsRebuildService] as SRS
+    [AiCallLogService] as ALS
+    [MatchReportService] as MRS
+}
+
+package "设计模式核心层 (state / chain / strategy / observer)" {
+    [状态模式\nMatchState + 4 个状态类] as SP
+    [责任链模式\nEventCheckHandler + 5 个 Handler] as CP
+    [策略模式\nAnalysisStrategy + 4 个策略类] as STP
+    [观察者模式\nMatchObserver + 4 个观察者] as OP
+}
+
+package "AI Agent 封装层 (agent)" {
+    [AiAgent 接口] as AI
+    [DataCollectAgent] as DCA
+    [RemoteModelAgent] as RMA
+    [LocalRuleAgent] as LRA
+    [SituationAnalysisAgent] as SAA
+    [ReviewReportAgent] as RRA
+}
+
+package "数据层 (Mapper + MySQL)" {
+    [MatchMapper] as MM
+    [TeamMapper] as TM
+    [PlayerMapper] as PM
+    [MatchEventMapper] as MEM
+    [PlayerStatisticsMapper] as PSM
+    [UserMapper] as UM
+    [MatchReportMapper] as MRM
+    [(MySQL 数据库)] as DB
+}
+
+AC --> US
+MC --> MS
+EC --> ES
+RC --> SS
+RC --> RS
+PC --> PS
+TC --> TC
+DC --> DS
+CMC --> MS
+CTC --> TM
+MRC --> MRS
+
+MS --> SP
+MS --> OP
+ES --> CP
+ES --> OP
+SS --> OP
+RS --> RRA
+RS --> SAA
+
+RRA --> DCA
+RRA --> RMA
+RRA --> LRA
+SAA --> DCA
+SAA --> RMA
+SAA --> STP
+RMA --> ALS
+
+MS --> MM
+ES --> MEM
+SS --> MEM
+PS --> PM
+US --> UM
+MRS --> MRM
+
+MM --> DB
+TM --> DB
+PM --> DB
+MEM --> DB
+PSM --> DB
+UM --> DB
+MRM --> DB
+@enduml

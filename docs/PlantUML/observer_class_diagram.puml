@@ -1,0 +1,67 @@
+@startuml observer_class_diagram
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+
+interface MatchObserver {
+    +onEventAdded(Match, MatchEvent): void
+}
+
+class ScoreBoardObserver {
+    +onEventAdded(Match, MatchEvent): void
+}
+note right of ScoreBoardObserver
+  @Order(1) 优先级最高
+  得分事件时更新比分
+end note
+
+class StatisticsObserver {
+    -findPlayer(Match, String): Player
+    +onEventAdded(Match, MatchEvent): void
+}
+note right of StatisticsObserver
+  @Order(2)
+  重算比赛统计数据
+  更新球员统计
+end note
+
+class RiskWarningObserver {
+    -{static} FOUL_WARNING_THRESHOLD: int = 4
+    -findPlayer(Match, String): Player
+    +onEventAdded(Match, MatchEvent): void
+}
+note right of RiskWarningObserver
+  @Order(3)
+  检测犯规累积、分差过大
+  生成风险预警
+end note
+
+class ReportObserver {
+    -matchEventLog: Map<String, List<MatchEvent>>
+    +onEventAdded(Match, MatchEvent): void
+    +getEventLog(String): List<MatchEvent>
+}
+note right of ReportObserver
+  @Order(4)
+  记录事件日志
+  为赛后复盘提供数据
+end note
+
+class MatchEventPublisher {
+    -observers: List<MatchObserver>
+    +subscribe(MatchObserver): void
+    +unsubscribe(MatchObserver): void
+    +publish(Match, MatchEvent): void
+}
+note right of MatchEventPublisher
+  Spring @Component
+  构造方法自动注入
+  所有 MatchObserver 实现
+end note
+
+MatchObserver <|.. ScoreBoardObserver
+MatchObserver <|.. StatisticsObserver
+MatchObserver <|.. RiskWarningObserver
+MatchObserver <|.. ReportObserver
+
+MatchEventPublisher o--> MatchObserver : observers\n(Spring 自动注入)
+@enduml

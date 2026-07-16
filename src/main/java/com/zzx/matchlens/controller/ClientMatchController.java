@@ -17,6 +17,8 @@ import com.zzx.matchlens.service.MatchService;
 import com.zzx.matchlens.service.QaMessageService;
 import com.zzx.matchlens.service.StatisticsService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -33,6 +35,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/client/matches")
 public class ClientMatchController {
 
+    private static final Logger log = LoggerFactory.getLogger(ClientMatchController.class);
     private final MatchService matchService;                       // 比赛服务，提供比赛 CRUD 和状态管理
     private final RemoteModelAgent remoteModelAgent;               // 远程 AI 模型智能体，用于调用 AI 推荐和问答
     private final DataCollectAgent dataCollectAgent;               // 数据采集智能体，收集比赛结构化数据供 AI 分析
@@ -113,28 +116,33 @@ public class ClientMatchController {
 
     /**
      * AI 智能推荐比赛
+     * @param request 推荐请求，包含用户观赛偏好描述
+     * @return 推荐结果列表（含比赛信息、推荐理由、匹配度评分），或失败提示
      */
     @PostMapping("/recommend")
     public Result<?> recommendMatches(@RequestBody RecommendMatchRequest request) {
+        // 1. 参数校验：用户偏好不能为空
         if (request.getPreference() == null || request.getPreference().isBlank()) {
             return Result.fail("请输入您的观赛偏好");
         }
 
+        // 2. 获取所有比赛数据
         List<Match> all = matchService.getAllMatches();
         if (all.isEmpty()) {
             return Result.fail("当前没有比赛数据");
         }
 
-        // 为每场比赛重算统计
+        // 3. 为每场比赛重算统计数据，确保比分、分差等字段为最新
         for (Match m : all) {
             if (m.getHomeTeam() != null && m.getAwayTeam() != null) {
                 m.getStatistics().updateFromMatch(m);
             }
         }
 
-        // 构建比赛数据摘要供 AI 分析
+        // 4. 构建比赛数据摘要文本，供 AI 分析使用
         String matchSummary = buildMatchSummary(all);
 
+        // 5. 构建系统提示词：定义 AI 推荐助手角色、推荐维度和返回格式
         String systemPrompt = "你是 MatchLens 智能赛事推荐助手。用户会描述他们想看的比赛类型、偏好球员或比赛风格，"
                 + "你需要从给定的比赛列表中选出最符合用户偏好的比赛（最多推荐5场），并说明推荐理由。\n\n"
                 + "推荐时可参考以下维度：\n"
@@ -152,33 +160,39 @@ public class ClientMatchController {
                 + "其中 score 为推荐匹配度（0-100），按 score 从高到低排序。"
                 + "只返回 JSON 数组，不要包含 markdown 代码块标记或其他文字。";
 
+        // 6. 构建用户提示词：包含所有比赛数据和用户的观赛偏好
         String userPrompt = "以下是当前所有比赛的数据：\n\n" + matchSummary
                 + "\n\n用户想看：" + request.getPreference()
                 + "\n\n请推荐最符合的比赛。";
 
+        // 7. 同步调用远程 AI 模型进行智能推荐
         AiAgentResponse response = remoteModelAgent.callGeneric(
                 systemPrompt, userPrompt, AiAgentType.MATCH_RECOMMENDATION);
 
+        // 8. AI 调用失败时返回错误信息
         if (!response.isSuccess()) {
             return Result.fail("AI 推荐失败：" + response.getErrorMessage());
         }
 
-        // 解析 AI 返回的 JSON
+        // 9. 解析 AI 返回的 JSON 并组装结果
         try {
             String content = response.getContent().trim();
-            // 移除可能的 markdown 代码块标记
+            // 移除 AI 可能包裹的 markdown 代码块标记（如 ```json ... ```）
             if (content.startsWith("```")) {
                 content = content.replaceAll("^```(?:json)?\\s*", "").replaceAll("\\s*```$", "");
             }
 
-            // 简单解析 JSON 数组
+            // 解析 JSON 数组，获取 AI 推荐的比赛 ID 列表
             List<Map<String, Object>> recommendations = parseRecommendations(content);
             List<Map<String, Object>> result = new ArrayList<>();
 
+            // 遍历 AI 推荐结果，关联比赛实体数据
             for (Map<String, Object> rec : recommendations) {
                 String matchId = (String) rec.get("matchId");
+                // 根据 AI 返回的 matchId 查找对应的比赛实体
                 Match match = all.stream().filter(m -> m.getMatchId().equals(matchId)).findFirst().orElse(null);
                 if (match != null) {
+                    // 组装返回给前端的推荐结果项
                     Map<String, Object> item = new LinkedHashMap<>();
                     item.put("matchId", match.getMatchId());
                     item.put("matchName", match.getMatchName());
@@ -187,6 +201,7 @@ public class ClientMatchController {
                     item.put("teamA", match.getHomeTeam());
                     item.put("teamB", match.getAwayTeam());
 
+                    // 附加比赛统计数据（比分、分差）
                     MatchStatistics stats = match.getStatistics();
                     Map<String, Object> scoreMap = new LinkedHashMap<>();
                     scoreMap.put("scoreA", stats.getHomeScore());
@@ -194,19 +209,21 @@ public class ClientMatchController {
                     scoreMap.put("scoreDifference", stats.getScoreDifference());
                     item.put("statistics", scoreMap);
 
+                    // 附加 AI 给出的推荐理由和匹配度评分
                     item.put("reason", rec.getOrDefault("reason", ""));
                     item.put("recommendScore", rec.getOrDefault("score", 0));
                     result.add(item);
                 }
             }
 
+            // AI 未匹配到任何有效比赛
             if (result.isEmpty()) {
                 return Result.fail("AI 未能匹配到合适的比赛，请尝试调整描述");
             }
 
             return Result.ok(result);
         } catch (Exception e) {
-            // AI 返回格式异常，直接返回原始文本
+            // AI 返回格式异常，直接返回原始文本供前端展示
             return Result.ok(Map.of(
                     "rawResponse", response.getContent(),
                     "message", "AI 返回格式异常，以下为原始分析结果"
@@ -245,32 +262,44 @@ public class ClientMatchController {
 
     /**
      * AI 赛事问答助手 - SSE 流式响应
+     * @param matchId  比赛 ID
+     * @param question 用户提出的问题
+     * @param request  HTTP 请求对象，用于获取 JWT 中的用户 ID
+     * @return SseEmitter SSE 发射器，超时时间 120 秒
      */
     @GetMapping(value = "/{matchId}/qa/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamQa(@PathVariable String matchId, @RequestParam String question,
                                HttpServletRequest request) {
+        // 从 JWT Token 中解析当前用户 ID（由 JwtInterceptor 注入）
         String userIdStr = (String) request.getAttribute("userId");
         Long userId = userIdStr != null ? Long.parseLong(userIdStr) : 0L;
 
+        // 创建 SSE 发射器，设置超时时间为 120 秒
         SseEmitter emitter = new SseEmitter(120000L);
+        // 将流式生成任务提交到线程池异步执行，避免阻塞主线程
         executor.execute(() -> {
             try {
+                // 1. 根据 matchId 查询比赛实体
                 Match match = matchRepository.findById(matchId).orElse(null);
                 if (match == null) {
+                    // 比赛不存在，发送 error 事件并结束
                     emitter.send(SseEmitter.event().name("error").data("比赛不存在"));
                     emitter.complete();
                     return;
                 }
 
-                // 保存用户提问
+                // 2. 保存用户提问到问答历史记录
                 qaMessageService.saveMessage(matchId, userId, "user", question);
 
+                // 3. 收集比赛结构化数据，构建 AI 问答所需的提示词
                 String matchData = dataCollectAgent.collect(match);
                 String systemPrompt = buildQaSystemPrompt(match, matchData);
                 String userPrompt = question;
 
+                // 4. 发送 start 事件，通知前端流式输出即将开始
                 emitter.send(SseEmitter.event().name("start").data(""));
 
+                // 5. 调用远程 AI 模型进行流式对话，每产生一个文本片段即通过 SSE chunk 事件推送
                 AiAgentResponse resp = remoteModelAgent.streamChat(match, systemPrompt, userPrompt,
                         AiAgentType.MATCH_QA, chunk -> {
                     try {
@@ -280,14 +309,18 @@ public class ClientMatchController {
                     }
                 });
 
-                // 保存 AI 回答
+                log.info("AI 赛事问答助手");
+
+                // 6. 流式完成后，将 AI 完整回答保存到问答历史记录
                 if (resp.isSuccess() && resp.getContent() != null) {
                     qaMessageService.saveMessage(matchId, userId, "ai", resp.getContent());
                 }
 
+                // 7. 发送 done 事件，通知前端流式输出结束，并关闭 SSE 连接
                 emitter.send(SseEmitter.event().name("done").data(""));
                 emitter.complete();
             } catch (Exception e) {
+                // 异常处理：尝试发送 error 事件通知前端，然后关闭连接
                 try {
                     emitter.send(SseEmitter.event().name("error").data("问答失败: " + e.getMessage()));
                 } catch (Exception ignored) {}

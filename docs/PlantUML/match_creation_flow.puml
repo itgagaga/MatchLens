@@ -1,0 +1,48 @@
+@startuml match_creation_flow
+skinparam activityFontSize 13
+
+|管理员|
+start
+:登录管理端系统;
+:点击"创建比赛";
+:填写比赛名称\n选择赛事类型\n(篮球/足球/排球/通用);
+
+|#LightBlue|系统|
+:创建 Match 实体\nstatus = NOT_STARTED\nsportType = 选定类型;
+:初始化 MatchState = NotStartedState;
+:保存到数据库 t_match;
+
+|管理员|
+:点击"设置队伍";
+:输入甲方(主队)名称\n输入乙方(客队)名称;
+
+|#LightBlue|系统|
+:创建 Team 实体\n关联到 Match;
+:保存到数据库 t_team;
+
+|管理员|
+:点击"添加球员";
+:为甲方添加球员\n(姓名、号码、位置等);
+:为乙方添加球员\n(姓名、号码、位置等);
+
+|#LightBlue|系统|
+:创建 Player 实体\n关联到对应 Team;
+:保存到数据库 t_player;
+
+|管理员|
+:点击"开始比赛";
+
+|#LightBlue|系统|
+:委托 MatchState.start(match);
+if (双方队伍已设置?) then (是)
+    :NotStartedState → RunningState;
+    :status = RUNNING;
+    :比赛正式开始;
+else (否)
+    :返回错误\n"必须设置甲方和乙方";
+endif
+
+|管理员|
+:比赛进入"进行中"状态;
+stop
+@enduml

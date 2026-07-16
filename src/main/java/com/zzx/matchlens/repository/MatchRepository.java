@@ -9,6 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * MatchRepository 是比赛的聚合仓储，
+ * 负责将比赛及其所有关联数据（队伍、球员、事件、统计）作为一个完整的领域对象进行统一存取，
+ * 让上层的 Service 和 Controller 无需关心底层多表关联的细节。
+ */
+
 @Repository
 public class MatchRepository {
 

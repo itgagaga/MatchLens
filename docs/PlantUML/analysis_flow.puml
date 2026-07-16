@@ -1,0 +1,43 @@
+@startuml analysis_flow
+skinparam activityFontSize 13
+
+|用户/管理员|
+start
+:在比赛详情页点击"态势分析";
+
+|#LightBlue|系统|
+:加载比赛完整数据;
+:SituationAnalysisAgent.analyze();
+
+|#LightBlue|数据采集|
+:DataCollectAgent.collect();
+:从事件重算比分和统计;
+:生成结构化数据摘要;
+
+|#LightBlue|远程AI调用|
+:RemoteModelAgent 调用 DeepSeek API;
+
+if (AI调用成功?) then (是)
+    |#LightBlue|SSE流式输出|
+    :Flux 接收文本流;
+    :SSE 实时推送到前端;
+    :前端渲染 Markdown;
+else (否)
+    |#LightBlue|策略模式降级|
+    :AnalysisStrategyFactory 选择策略;
+    switch (赛事类型)
+    case (篮球)
+        :BasketballAnalysis;
+    case (足球)
+        :FootballAnalysis;
+    case (排球)
+        :VolleyballAnalysis;
+    case (通用)
+        :GeneralAnalysis;
+    endswitch
+endif
+
+|用户/管理员|
+:查看态势分析报告;
+stop
+@enduml

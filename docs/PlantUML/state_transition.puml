@@ -1,0 +1,45 @@
+@startuml state_transition
+skinparam stateFontSize 14
+
+[*] --> NotStarted : 创建比赛
+
+state NotStarted {
+}
+state Running {
+}
+state Paused {
+}
+state Finished {
+}
+
+NotStarted --> Running : start()\n设置双方队伍后开始
+Running --> Paused : pause()\n暂停比赛
+Paused --> Running : resume()\n恢复比赛
+Running --> Finished : finish()\n结束比赛
+Paused --> Finished : finish()\n暂停中结束
+
+Finished --> [*]
+
+note right of NotStarted
+  允许: start, modifyTeams
+  禁止: pause, resume, finish,
+        addEvent, viewReport
+end note
+
+note right of Running
+  允许: pause, finish, addEvent
+  禁止: start, resume,
+        modifyTeams, viewReport
+end note
+
+note right of Paused
+  允许: resume, finish, viewReport
+  禁止: start, pause, addEvent,
+        modifyTeams
+end note
+
+note right of Finished
+  允许: viewReport
+  禁止: 所有修改操作
+end note
+@enduml

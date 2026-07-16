@@ -1,0 +1,69 @@
+@startuml module_diagram
+skinparam componentFontSize 13
+skinparam rectangleFontSize 13
+
+rectangle "MatchLens 系统模块划分" {
+
+    rectangle "用户认证模块" as M1 {
+        component "AuthController"
+        component "UserService"
+        component "JwtInterceptor"
+        component "JwtUtil"
+    }
+
+    rectangle "比赛管理模块" as M2 {
+        component "MatchController"
+        component "MatchService"
+        component "MatchRepository"
+        component "MatchMapper"
+    }
+
+    rectangle "事件采集模块" as M3 {
+        component "EventController"
+        component "EventService"
+        component "MatchEventMapper"
+    }
+
+    rectangle "数据统计模块" as M4 {
+        component "ReportController"
+        component "StatisticsService"
+        component "StatisticsRebuildService"
+    }
+
+    rectangle "态势分析模块" as M5 {
+        component "SituationAnalysisAgent"
+        component "AnalysisStrategyFactory"
+        component "4个策略类"
+    }
+
+    rectangle "赛后复盘模块" as M6 {
+        component "ReviewReportAgent"
+        component "LocalRuleAgent"
+        component "MatchReportService"
+    }
+
+    rectangle "AI问答模块" as M7 {
+        component "QaMessageService"
+        component "RemoteModelAgent"
+        component "QaMessageMapper"
+    }
+
+    rectangle "数据看板模块" as M8 {
+        component "DashboardController"
+        component "DashboardService"
+    }
+
+    rectangle "排行榜模块" as M9 {
+        component "RankingController"
+        component "PlayerStatisticsMapper"
+    }
+}
+
+M1 --> M2 : 认证拦截
+M2 --> M3 : 事件录入
+M3 --> M4 : 统计重算
+M5 --> M6 : 共享Agent
+M5 --> M7 : 共享RemoteModelAgent
+M2 --> M4 : 统计数据
+M6 --> M4 : 报告存储
+@enduml

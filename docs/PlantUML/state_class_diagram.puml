@@ -1,0 +1,89 @@
+@startuml state_class_diagram
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+
+interface MatchState {
+    +start(Match): Result<String>
+    +pause(Match): Result<String>
+    +resume(Match): Result<String>
+    +finish(Match): Result<String>
+    +addEvent(Match): Result<String>
+    +modifyTeams(Match): Result<String>
+    +viewReport(Match): Result<String>
+}
+
+class NotStartedState {
+    +start(Match): Result<String>
+    +pause(Match): Result<String>
+    +resume(Match): Result<String>
+    +finish(Match): Result<String>
+    +addEvent(Match): Result<String>
+    +modifyTeams(Match): Result<String>
+    +viewReport(Match): Result<String>
+}
+
+class RunningState {
+    +start(Match): Result<String>
+    +pause(Match): Result<String>
+    +resume(Match): Result<String>
+    +finish(Match): Result<String>
+    +addEvent(Match): Result<String>
+    +modifyTeams(Match): Result<String>
+    +viewReport(Match): Result<String>
+}
+
+class PausedState {
+    +start(Match): Result<String>
+    +pause(Match): Result<String>
+    +resume(Match): Result<String>
+    +finish(Match): Result<String>
+    +addEvent(Match): Result<String>
+    +modifyTeams(Match): Result<String>
+    +viewReport(Match): Result<String>
+}
+
+class FinishedState {
+    +start(Match): Result<String>
+    +pause(Match): Result<String>
+    +resume(Match): Result<String>
+    +finish(Match): Result<String>
+    +addEvent(Match): Result<String>
+    +modifyTeams(Match): Result<String>
+    +viewReport(Match): Result<String>
+}
+
+class Match {
+    -matchId: String
+    -matchName: String
+    -sportType: SportType
+    -status: MatchStatus
+    -state: MatchState
+    -homeTeam: Team
+    -awayTeam: Team
+    -events: List<MatchEvent>
+    -statistics: MatchStatistics
+    +start(): Result<String>
+    +pause(): Result<String>
+    +resume(): Result<String>
+    +finish(): Result<String>
+    +canAddEvent(): Result<String>
+    +canModifyTeams(): Result<String>
+    +canViewReport(): Result<String>
+    +syncState(): void
+}
+
+enum MatchStatus {
+    NOT_STARTED
+    RUNNING
+    PAUSED
+    FINISHED
+}
+
+MatchState <|.. NotStartedState
+MatchState <|.. RunningState
+MatchState <|.. PausedState
+MatchState <|.. FinishedState
+
+Match o-- MatchState : state\n(状态模式委托)
+Match --> MatchStatus : status
+@enduml

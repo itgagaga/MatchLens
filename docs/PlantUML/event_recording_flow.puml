@@ -1,0 +1,61 @@
+@startuml event_recording_flow
+skinparam activityFontSize 13
+
+|管理员|
+start
+:选择进行中的比赛;
+:点击"录入事件";
+:选择队伍、球员\n选择事件类型\n填写得分值(如适用);
+
+|#LightBlue|系统 - 责任链校验|
+:构建 MatchEvent 对象;
+:**第一环: 基础数据校验**\nmatchId, teamId, playerId,\neventType 是否非空;
+if (通过?) then (是)
+else (否)
+    :返回错误: "基础数据不完整";
+    stop
+endif
+
+:**第二环: 比赛状态校验**\n当前状态是否为 RUNNING;
+if (通过?) then (是)
+else (否)
+    :返回错误: "当前状态不允许录入";
+    stop
+endif
+
+:**第三环: 球员合法性校验**\n球员是否属于参赛队伍;
+if (通过?) then (是)
+else (否)
+    :返回错误: "球员不属于参赛队伍";
+    stop
+endif
+
+:**第四环: 事件类型校验**\n事件类型是否适配赛事类型;
+if (通过?) then (是)
+else (否)
+    :返回错误: "事件类型不匹配";
+    stop
+endif
+
+:**第五环: 得分值校验**\n得分值是否合法;
+if (通过?) then (是)
+else (否)
+    :返回错误: "得分值不合法";
+    stop
+endif
+
+|#LightBlue|系统 - 持久化|
+:事件保存到 t_match_event;
+
+|#LightBlue|系统 - 观察者联动|
+:MatchEventPublisher.publish();
+:**ScoreBoardObserver** @Order(1)\n更新比分;
+:**StatisticsObserver** @Order(2)\n重算统计数据;
+:**RiskWarningObserver** @Order(3)\n检测犯规/分差异常;
+:**ReportObserver** @Order(4)\n记录事件日志;
+
+|管理员|
+:显示"事件录入成功";
+:界面自动刷新\n(比分、统计、时间线);
+stop
+@enduml

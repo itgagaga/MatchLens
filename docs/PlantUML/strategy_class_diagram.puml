@@ -1,0 +1,67 @@
+@startuml strategy_class_diagram
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+
+interface AnalysisStrategy {
+    +analyze(Match): String
+}
+
+class BasketballAnalysisStrategy {
+    +analyze(Match): String
+}
+note right of BasketballAnalysisStrategy
+  篮球赛事分析策略
+  分析: 比分分差、连续得分势头
+  犯规统计、关键球员表现
+end note
+
+class FootballAnalysisStrategy {
+    +analyze(Match): String
+}
+note right of FootballAnalysisStrategy
+  足球赛事分析策略
+  分析: 进球、红黄牌
+  犯规统计、换人分析
+end note
+
+class VolleyballAnalysisStrategy {
+    +analyze(Match): String
+}
+note right of VolleyballAnalysisStrategy
+  排球赛事分析策略
+  分析: 比分、发球得分
+  拦网、失误统计
+end note
+
+class GeneralAnalysisStrategy {
+    +analyze(Match): String
+}
+note right of GeneralAnalysisStrategy
+  通用赛事兜底策略
+  分析: 基本比分、分差
+  关键事件统计
+end note
+
+class AnalysisStrategyFactory {
+    +{static} getStrategy(SportType): AnalysisStrategy
+}
+note right of AnalysisStrategyFactory
+  简单工厂模式
+  根据 SportType 创建对应策略实例
+end note
+
+enum SportType {
+    BASKETBALL
+    FOOTBALL
+    VOLLEYBALL
+    GENERAL
+}
+
+AnalysisStrategy <|.. BasketballAnalysisStrategy
+AnalysisStrategy <|.. FootballAnalysisStrategy
+AnalysisStrategy <|.. VolleyballAnalysisStrategy
+AnalysisStrategy <|.. GeneralAnalysisStrategy
+
+AnalysisStrategyFactory --> AnalysisStrategy : creates
+AnalysisStrategyFactory --> SportType : uses
+@enduml

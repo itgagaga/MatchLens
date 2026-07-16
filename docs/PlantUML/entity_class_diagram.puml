@@ -1,0 +1,124 @@
+@startuml entity_class_diagram
+skinparam classAttributeIconSize 0
+skinparam classFontSize 13
+
+class Match {
+    -matchId: String
+    -matchName: String
+    -sportType: SportType
+    -status: MatchStatus
+    -homeTeamId: String
+    -awayTeamId: String
+    -createTime: LocalDateTime
+    -updateTime: LocalDateTime
+    -state: MatchState
+    -homeTeam: Team
+    -awayTeam: Team
+    -events: List<MatchEvent>
+    -statistics: MatchStatistics
+}
+
+class Team {
+    -teamId: String
+    -teamName: String
+    -score: int
+    -city: String
+    -coachName: String
+    -players: List<Player>
+    +addPlayer(Player): void
+    +findPlayer(String): Player
+    +addScore(int): void
+}
+
+class Player {
+    -playerId: String
+    -playerName: String
+    -teamId: String
+    -number: int
+    -position: String
+    -age: int
+    -height: int
+    -weight: int
+    -statistics: Map<String, Integer>
+    +addStat(String, int): void
+    +getStat(String): int
+}
+
+class MatchEvent {
+    -eventId: String
+    -matchId: String
+    -teamId: String
+    -playerId: String
+    -eventType: EventType
+    -scoreValue: int
+    -eventTime: LocalDateTime
+    -description: String
+}
+
+class MatchStatistics {
+    -homeScore: int
+    -awayScore: int
+    -playerStats: Map<String, Map<String, Integer>>
+    -teamStats: Map<String, Integer>
+    -eventCount: int
+    -leadingTeam: String
+    -scoreDifference: int
+    +updateFromMatch(Match): void
+    +computeAggregates(Match): void
+}
+
+class User {
+    -userId: String
+    -username: String
+    -password: String
+    -nickname: String
+    -role: String
+}
+
+class MatchReport {
+    -reportId: String
+    -matchId: String
+    -reportType: String
+    -content: String
+    -createTime: LocalDateTime
+}
+
+enum SportType {
+    BASKETBALL
+    FOOTBALL
+    VOLLEYBALL
+    GENERAL
+}
+
+enum MatchStatus {
+    NOT_STARTED
+    RUNNING
+    PAUSED
+    FINISHED
+}
+
+enum EventType {
+    SCORE
+    FOUL
+    ASSIST
+    REBOUND
+    STEAL
+    TURNOVER
+    TIMEOUT
+    YELLOW_CARD
+    RED_CARD
+    SUBSTITUTION
+    BLOCK
+    SERVE_ACE
+    ERROR
+}
+
+Match "1" --> "1" Team : homeTeam (甲方)
+Match "1" --> "1" Team : awayTeam (乙方)
+Team "1" --> "*" Player : players
+Match "1" --> "*" MatchEvent : events
+Match "1" --> "1" MatchStatistics : statistics
+Match --> SportType
+Match --> MatchStatus
+MatchEvent --> EventType
+@enduml

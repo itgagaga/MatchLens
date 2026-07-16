@@ -1,0 +1,54 @@
+@startuml analysis_sequence
+skinparam sequenceMessageAlign center
+skinparam sequenceFontSize 13
+
+actor "用户/管理员" as User
+participant "ReportController" as RC
+participant "ReportService" as RS
+participant "SituationAnalysis\nAgent" as SAA
+participant "DataCollectAgent" as DCA
+participant "RemoteModelAgent" as RMA
+participant "ChatClient\n(Spring AI)" as CC
+participant "DeepSeek API" as DS
+participant "AnalysisStrategy\nFactory" as ASF
+participant "BasketballAnalysis\nStrategy" as BAS
+participant "SseEmitter" as SSE
+participant "前端 EventSource" as FE
+
+User -> RC: GET /api/matches/{id}/analysis/stream\n(SSE 请求)
+RC -> RS: streamAnalysis(matchId, sseEmitter)
+RS -> SAA: analyze(match)
+
+SAA -> DCA: collect(match)
+DCA -> DCA: rebuildPlayerStatsFromEvents()
+DCA -> DCA: 拼接结构化数据文本
+DCA --> SAA: 返回数据摘要
+
+SAA -> RMA: callWithPrompt(match, SITUATION_ANALYSIS,\nsystemPrompt, userPrompt)
+
+RMA -> CC: prompt().system().user().stream().content()
+CC -> DS: HTTP 流式请求
+DS --> CC: Flux<String> 文本流
+
+loop 流式输出
+    CC --> RMA: chunk (文本片段)
+    RMA -> SSE: emitter.send(chunk)
+    SSE --> FE: SSE event (实时推送)
+    FE -> FE: 渲染 Markdown 内容
+end
+
+alt 远程AI调用成功
+    RMA --> SAA: AiAgentResponse(success, content)
+    SAA --> RS: 返回AI分析文本
+else 远程AI调用失败
+    RMA --> SAA: AiAgentResponse(failure, errorMsg)
+    SAA -> ASF: getStrategy(match.getSportType())
+    ASF --> SAA: BasketballAnalysisStrategy
+    SAA -> BAS: analyze(match)
+    BAS --> SAA: 返回本地策略分析文本
+    SAA --> RS: 返回本地分析结果
+end
+
+RS --> RC: 分析完成
+RC --> User: SSE 流式展示分析报告
+@enduml

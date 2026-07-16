@@ -33,7 +33,7 @@ public class DataCollectAgent implements AiAgent {
      * @return 结构化数据文本
      */
     public String collect(Match match) {
-        // 先重算统计，确保比分和球员数据均来自事件而非持久化旧值
+        // 统计，确保比分和球员数据
         if (match.getStatistics() != null && match.getHomeTeam() != null && match.getAwayTeam() != null) {
             // 从事件重算球员统计，避免 DB 中的旧统计与事件不一致
             rebuildPlayerStatsFromEvents(match);

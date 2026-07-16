@@ -1,0 +1,47 @@
+@startuml review_flow
+skinparam activityFontSize 13
+
+|管理员|
+start
+:点击"结束比赛";
+
+|#LightBlue|状态模式|
+:委托 MatchState.finish(match);
+:RunningState → FinishedState;
+:status = FINISHED;
+
+|#LightBlue|系统|
+:触发赛后复盘流程;
+:ReviewReportAgent.execute(match);
+
+|#LightBlue|数据采集|
+:DataCollectAgent.collect(match);
+:rebuildPlayerStatsFromEvents()\n从事件重算全部数据;
+:生成结构化数据摘要;
+
+|#LightBlue|远程AI调用|
+:RemoteModelAgent.callWithPrompt()\n(复盘系统提示词 + 数据摘要);
+:ChatClient.call() 同步调用\nDeepSeek API (最多重试2次);
+
+if (远程AI调用成功?) then (是)
+    :返回AI生成的复盘报告\n(胜负分析、关键球员、\n改进建议等);
+else (否)
+    |#LightBlue|本地规则降级|
+    :LocalRuleAgent.execute(match);
+    :分析比赛结果\n(胜方/分差/大优势/险胜);
+    :统计关键球员得分;
+    :统计犯规/得分事件;
+    :分析胜负原因;
+    :生成改进建议;
+    :返回模板复盘报告;
+endif
+
+|#LightBlue|报告持久化|
+:MatchReportService.saveOrUpdate()\n报告类型 = REVIEW;
+:同类型报告自动覆盖旧版本;
+:保存到 t_match_report;
+
+|管理员|
+:在比赛详情页\n查看赛后复盘报告;
+stop
+@enduml
